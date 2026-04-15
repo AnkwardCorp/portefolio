@@ -27,6 +27,7 @@ body.dark {
 #app {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   position: relative;
 }
 
@@ -94,7 +95,7 @@ body.dark {
   height: 0;
   overflow: visible;
   opacity: 0;
-  width: 300px;
+  width: min(300px, 85vw);
   pointer-events: none;
   font-size: 14px;
   font-weight: 400;
