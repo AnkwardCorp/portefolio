@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AnkwardCorp: Amin Ankward</title>
+<link rel="stylesheet" href="style.css" />
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+        "tweakpane": "https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.js"
+      }
+    }
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="canvas"></canvas>
+      <div id="ui-overlay"></div>
+      <div id="bottom-links">
+        <a href="https://x.com/amin_ankward" target="_blank" rel="noopener">X/Twitter</a>
+        <span id="email-wrapper">
+          <span id="email-label">Email</span>
+          <span id="email-address">amin.ankward@gmail.com</span>
+        </span>
+        <a href="https://instagram.com/amin_ankward" target="_blank" rel="noopener">Instagram</a>
+      </div>
+      <div id="center-text">
+        <div id="center-anchor">
+          <img id="profile-pic" src="./assets/textures/Amin_ankward_Profile_View.jpg" alt="profile" />
+          <div id="header-text">@amin_ankward<br><span id="header-subtitle">Work with creatives</span></div>
+          <button id="lets-go-btn">Let's go</button>
+          <div id="scroll-text">
+            <p>I am Amin, a designer who creates and develops concepts and ideas. I’ve been doing this for years with clients around the world. I enjoy exploring, experimenting, failing, and starting again—until it leads to something meaningful. Here are some of my personal and professional creations. I’m always open to collaborating on new projects.</p>
+            <div id="browse-wrapper">
+              <span class="browse-arrow">→</span>
+              <a id="browse-btn" href="browse.html">Browse</a>
+              <span class="browse-arrow">←</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button id="theme-toggle" aria-label="Toggle dark mode">☽</button>
+    <script>
+      document.getElementById('email-wrapper').addEventListener('click', function () {
+        this.classList.toggle('revealed');
+      });
+    </script>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>

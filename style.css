@@ -1,0 +1,244 @@
+:root {
+  --text-primary:   #111111;
+  --text-secondary: #444444;
+}
+
+body.dark {
+  --text-primary:   #eeeeee;
+  --text-secondary: #aaaaaa;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: linear-gradient(to bottom, #ffffff, #B5B5B5);
+  overflow: hidden;
+  transition: background 0.4s ease;
+}
+
+body.dark {
+  background: linear-gradient(to bottom, #1E1E1E, #000000);
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+#canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#center-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+  transition: color 0.4s ease;
+}
+
+#center-anchor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#profile-pic {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 16px;
+}
+
+#header-text {
+  line-height: 1.5;
+  transition: opacity 0.5s ease;
+}
+
+#lets-go-btn {
+  margin-top: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0;
+  transition: opacity 0.4s, color 0.4s;
+  pointer-events: auto;
+}
+
+#lets-go-btn:hover { opacity: 0.5; }
+
+#scroll-text {
+  height: 0;
+  overflow: visible;
+  opacity: 0;
+  width: 300px;
+  pointer-events: none;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  text-align: justify;
+}
+
+#scroll-text.visible {
+  pointer-events: auto;
+}
+
+#scroll-text p {
+  line-height: 1.6;
+}
+
+#browse-wrapper {
+  margin-top: 20px;
+  text-align: center;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.browse-arrow {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  transition: color 0.4s ease;
+}
+
+#browse-btn {
+  color: var(--text-primary);
+  text-decoration: underline;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  transition: color 0.4s ease;
+}
+
+#bottom-links {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  opacity: 0;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+#bottom-links.visible {
+  pointer-events: auto;
+}
+
+#bottom-links a {
+  color: var(--text-primary);
+  text-decoration: underline;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.4s ease;
+}
+
+#email-wrapper {
+  position: relative;
+  display: inline-block;
+  height: 1.2em;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#email-label {
+  display: inline-block;
+  color: var(--text-primary);
+  text-decoration: underline;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+#email-address {
+  position: absolute;
+  left: 50%;
+  transform: translateX(calc(-50% + 16px));
+  opacity: 0;
+  color: var(--text-primary);
+  white-space: nowrap;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+  pointer-events: none;
+}
+
+#email-wrapper.revealed #email-label {
+  transform: translateX(-16px);
+  opacity: 0;
+}
+
+#email-wrapper.revealed #email-address {
+  transform: translateX(-50%);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#ui-overlay {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  color: #fff;
+  font-family: monospace;
+  font-size: 13px;
+  pointer-events: none;
+  user-select: none;
+}
+
+#theme-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-primary);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: opacity 0.2s, border-color 0.4s, color 0.4s;
+}
+
+#theme-toggle:hover {
+  opacity: 0.5;
+}
+
+body:not(.dark) #theme-toggle {
+  transform: rotate(180deg);
+}

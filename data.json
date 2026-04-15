@@ -1,0 +1,101 @@
+[
+  {
+    "image": "assets/textures/projects_pics/apple.png",
+    "name": "Adam ThreeJS apple",
+    "description": "interaction on an ... apple ? a new (easy) concept for a future project it works with basic functions, and would be perfect on a website with users who want to reveal the true nature of an apple (what ?)",
+    "client": "//",
+    "owner": "Amin Ankward",
+    "tech": "Blender, ThreeJS",
+    "link": "https://x.com/Amin_Ankward/status/1910357604913877078"
+  },
+  {
+    "image": "assets/textures/projects_pics/rock.png",
+    "name": "Cool rock multi-user interaction",
+    "description": "multi-user interaction (...on a rock ?) a new (conceptual) interaction for web designI imagine this concept for an interaction using ThreeJSit works via geonodes and is based on basic mathematical and proximity functionsI like this one",
+    "client": "//",
+    "owner": "Amin Ankward",
+    "tech": "Blender, ThreeJS, Geonodes",
+    "link": "https://x.com/Amin_Ankward/status/1904567453599834601"
+  },
+  {
+    "image": "assets/textures/projects_pics/moss.png",
+    "name": "Time to style the moss industry - ThreeJS Concept",
+    "description": "it's time to style the moss industry more exploration of interactive (conceptual) elements for web design with ThreeJS it works via geonodes and is based on basic math and proximity functions, I think I'm going to keep making concepts like that",
+    "client": "//",
+    "owner": "Amin Ankward",
+    "tech": "Blender, ThreeJS, Geonodes, concept",
+    "link": "https://x.com/Amin_Ankward/status/1899511637817880769"
+  },
+  {
+    "image": "assets/textures/projects_pics/buildings.png",
+    "name": "Procedural Building Motion",
+    "description": "procedural building motion I'm testing for a future (...interactive ?) rendering with animation",
+    "client": "//",
+    "owner": "Amin Ankward",
+    "tech": "Blender, Geonodes",
+    "link": "https://x.com/Amin_Ankward/status/1925197639748104455"
+  },
+  {
+    "image": "assets/textures/projects_pics/plant.png",
+    "name": "ThreeJS Plant",
+    "description": "time to reveal the details  (͡ ° ͜ʖ ͡ °) more exploration of interactive elements for web design with ThreeJS, (or simply motion design)",
+    "client": "//",
+    "owner": "Amin Ankward",
+    "tech": "Blender, ThreeJS",
+    "link": "https://x.com/Amin_Ankward/status/1898061834747257167"
+  },
+  {
+    "image": "assets/textures/projects_pics/V21.png",
+    "name": "Motion for V21Studio",
+    "description": "A web3's premium motion for V21. Miki is going to come up with some crazy projects !",
+    "client": "V21Studio, Mikki",
+    "owner": "Amin Ankward",
+    "tech": "Blender, Motion design",
+    "link": "https://x.com/Amin_Ankward/status/1924207196495073427"
+  },
+  {
+    "image": "assets/textures/projects_pics/36days.png",
+    "name": "36 days of type",
+    "description": "Here we go (again) Letter B for the 10th edition of #36daysoftype",
+    "client": "//",
+    "owner": "Amin Ankward",
+    "tech": "Blender, Geonodes",
+    "link": "https://www.instagram.com/amin_ankward/"
+  },
+  {
+    "image": "assets/textures/projects_pics/lens.png",
+    "name": "Social Lens v2.0",
+    "description": "Social Lens is a user-friendly tool for capturing and sharing moments seamlessly. With a focus on simplicity and connection, each image on the platform reflects authentic experiences shared among its community members.",
+    "client": "//",
+    "owner": "Amin Ankward",
+    "tech": "Blender, ThreeJS, Geonodes, product design",
+    "link": "https://www.instagram.com/amin_ankward/"
+  },
+  {
+    "image": "assets/textures/projects_pics/picture.png",
+    "name": "« Social Lens » 1988 product design animation",
+    "description": "Social Lens is a device specific to the 80s. The object allows everyone to share their photos directly at the very beginning of what could be called the Internet! 🛜The atmosphere chosen for this product is typical of the 80s.The main idea is to mix a retro style and a connected object, up to date. 🧐",
+    "client": "//",
+    "owner": "Amin Ankward",
+    "tech": "Blender, Geonodes, motion graphics",
+    "link": "https://www.instagram.com/amin_ankward/"
+  },
+  {
+    "image": "assets/textures/projects_pics/robot.png",
+    "name": "IMPULSA",
+    "description": "IMPULSA CONCEPT Engine Introduction, (fig 1)",
+    "client": "//",
+    "owner": "Amin Ankward",
+    "tech": "Blender, Geonodes, product design",
+    "link": "https://www.instagram.com/amin_ankward/"
+  },
+  {
+    "image": "assets/textures/projects_pics/flower.png",
+    "name": "Flower",
+    "description": "//",
+    "client": "//",
+    "owner": "Amin Ankward",
+    "tech": "Blender",
+    "link": "https://www.instagram.com/amin_ankward/"
+  }
+]
