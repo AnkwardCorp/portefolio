@@ -76,6 +76,7 @@ export class AppController {
     this._letsGoHidden = false;
 
     this._letsGoBtn.addEventListener('click', () => {
+      if (!this.cameraScrollEnabled) return;
       this._hideLetsGo();
       this._autoAdvance = true;
     });
@@ -101,7 +102,7 @@ export class AppController {
       if (this._lastTouchY === null) return;
       if (IS_MOBILE) {
         // Mobile : tout scroll déclenche l'avance automatique directe
-        if (!this._autoAdvance) {
+        if (!this._autoAdvance && this.cameraScrollEnabled) {
           this._hideLetsGo();
           this._autoAdvance = true;
         }

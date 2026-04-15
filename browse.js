@@ -302,7 +302,7 @@ function init(gltf, projects) {
     glbCam.updateMatrixWorld(true);
     // Sur mobile (portrait), le FOV vertical natif est trop proche — on le réduit
     if (window.matchMedia('(pointer: coarse)').matches && glbCam.isPerspectiveCamera) {
-      glbCam.zoom = 0.55;
+      glbCam.zoom = 0.42;
       glbCam.updateProjectionMatrix();
     }
     camera = glbCam;
