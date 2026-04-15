@@ -147,41 +147,29 @@ export class AppController {
 
     // Gyroscope — parallax sprites sur mobile
     if (IS_MOBILE) {
-      // Debug overlay temporaire
-      const dbg = document.createElement('div');
-      dbg.id = 'gyro-debug';
-      dbg.style.cssText = 'position:fixed;top:10px;left:10px;z-index:9999;background:rgba(0,0,0,0.7);color:#0f0;font:12px monospace;padding:6px 10px;border-radius:6px;pointer-events:none';
-      dbg.textContent = 'GYRO: waiting…';
-      document.body.appendChild(dbg);
-
       const startGyro = () => {
-        dbg.textContent = 'GYRO: listener attached';
         window.addEventListener('deviceorientation', (e) => {
-          if (e.gamma === null && e.beta === null) {
-            dbg.textContent = 'GYRO: event null';
-            return;
-          }
-          const gx = Math.max(-1, Math.min(1,  (e.gamma || 0) / 45));
-          const gy = Math.max(-1, Math.min(1, -((e.beta  || 0) - 45) / 45));
-          this._gyroTargetX = gx;
-          this._gyroTargetY = gy;
-          dbg.textContent = `GYRO OK  γ=${(e.gamma||0).toFixed(1)}° β=${(e.beta||0).toFixed(1)}°\nnX=${gx.toFixed(2)} nY=${gy.toFixed(2)}`;
+          if (e.gamma === null && e.beta === null) return;
+          this._gyroTargetX = Math.max(-1, Math.min(1,  (e.gamma || 0) / 45));
+          this._gyroTargetY = Math.max(-1, Math.min(1, -((e.beta  || 0) - 45) / 45));
         });
       };
 
-      // iOS 13+ requiert une permission explicite sur geste utilisateur
+      // iOS 13+ : requestPermission() doit être appelé depuis un click handler sur un élément
       if (typeof DeviceOrientationEvent !== 'undefined' &&
           typeof DeviceOrientationEvent.requestPermission === 'function') {
-        dbg.textContent = 'GYRO: iOS — tap pour permission';
-        const askPermission = () => {
+        const btn = document.createElement('button');
+        btn.id = 'gyro-permission-btn';
+        btn.textContent = 'Activer le mouvement';
+        document.body.appendChild(btn);
+        btn.addEventListener('click', () => {
           DeviceOrientationEvent.requestPermission()
             .then(state => {
-              dbg.textContent = `GYRO perm: ${state}`;
               if (state === 'granted') startGyro();
+              btn.remove();
             })
-            .catch(err => { dbg.textContent = `GYRO err: ${err}`; });
-        };
-        window.addEventListener('touchstart', askPermission, { once: true });
+            .catch(() => btn.remove());
+        });
       } else {
         startGyro();
       }

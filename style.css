@@ -91,6 +91,25 @@ body.dark {
 
 #lets-go-btn:hover { opacity: 0.5; }
 
+#gyro-permission-btn {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  background: none;
+  border: 1px solid var(--text-primary);
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+#gyro-permission-btn:active { opacity: 1; }
+
 #scroll-text {
   height: 0;
   overflow: visible;
