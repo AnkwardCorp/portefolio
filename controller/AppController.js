@@ -52,6 +52,11 @@ export class AppController {
     this.cameraMouseX = 0;
     this.cameraMouseY = 0;
 
+    this._gyroX = 0;
+    this._gyroY = 0;
+    this._gyroTargetX = 0;
+    this._gyroTargetY = 0;
+
     // Models
     this.sceneModel = new SceneModel();
     this.glbModel = new GLBModel();
@@ -139,6 +144,48 @@ export class AppController {
       this.mouseNormY = -(e.clientY / window.innerHeight - 0.5) * 2;
       this.glbView.setPointer(this.mouseNormX, this.mouseNormY);
     });
+
+    // Gyroscope — parallax sprites sur mobile
+    if (IS_MOBILE) {
+      // Debug overlay temporaire
+      const dbg = document.createElement('div');
+      dbg.id = 'gyro-debug';
+      dbg.style.cssText = 'position:fixed;top:10px;left:10px;z-index:9999;background:rgba(0,0,0,0.7);color:#0f0;font:12px monospace;padding:6px 10px;border-radius:6px;pointer-events:none';
+      dbg.textContent = 'GYRO: waiting…';
+      document.body.appendChild(dbg);
+
+      const startGyro = () => {
+        dbg.textContent = 'GYRO: listener attached';
+        window.addEventListener('deviceorientation', (e) => {
+          if (e.gamma === null && e.beta === null) {
+            dbg.textContent = 'GYRO: event null';
+            return;
+          }
+          const gx = Math.max(-1, Math.min(1,  (e.gamma || 0) / 45));
+          const gy = Math.max(-1, Math.min(1, -((e.beta  || 0) - 45) / 45));
+          this._gyroTargetX = gx;
+          this._gyroTargetY = gy;
+          dbg.textContent = `GYRO OK  γ=${(e.gamma||0).toFixed(1)}° β=${(e.beta||0).toFixed(1)}°\nnX=${gx.toFixed(2)} nY=${gy.toFixed(2)}`;
+        });
+      };
+
+      // iOS 13+ requiert une permission explicite sur geste utilisateur
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        dbg.textContent = 'GYRO: iOS — tap pour permission';
+        const askPermission = () => {
+          DeviceOrientationEvent.requestPermission()
+            .then(state => {
+              dbg.textContent = `GYRO perm: ${state}`;
+              if (state === 'granted') startGyro();
+            })
+            .catch(err => { dbg.textContent = `GYRO err: ${err}`; });
+        };
+        window.addEventListener('touchstart', askPermission, { once: true });
+      } else {
+        startGyro();
+      }
+    }
 
     window.addEventListener('resize', () => this.sceneView.onResize());
 
@@ -235,6 +282,22 @@ export class AppController {
     else if (!this._autoAdvance) this._showLetsGo();
 
     this.sceneView.setScrollVelocity(this.cameraAdvanceVel);
+
+    // Gyroscope mobile — lissage et alimentation du parallax
+    if (IS_MOBILE) {
+      const gyroAlpha = 1 - Math.exp(-5 * rawDelta);
+      this._gyroX += (this._gyroTargetX - this._gyroX) * gyroAlpha;
+      this._gyroY += (this._gyroTargetY - this._gyroY) * gyroAlpha;
+      // Réutilise le système parallax caméra existant
+      this.mouseNormX = this._gyroX;
+      this.mouseNormY = this._gyroY;
+      // Décalage direct des groupes de sprites pour un effet de profondeur
+      const gAmp = 0.25;
+      this.glbView.group.position.x  = this._gyroX * gAmp;
+      this.glbView.group.position.y  = this._gyroY * gAmp;
+      this.glbView.group2.position.x = this._gyroX * gAmp * PARAMS.torus2Factor;
+      this.glbView.group2.position.y = this._gyroY * gAmp * PARAMS.torus2Factor;
+    }
 
     // Parallax souris — exponentiel pour indépendance au framerate
     const parallaxAlpha = 1 - Math.exp(-PARAMS.parallaxLerp * 60 * rawDelta);
