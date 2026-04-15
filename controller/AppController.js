@@ -292,21 +292,26 @@ export class AppController {
   _hideLetsGo() {
     if (this._letsGoHidden) return;
     this._letsGoHidden = true;
-    this._letsGoBtn.style.opacity = '0';
     this._letsGoBtn.style.pointerEvents = 'none';
-    this._letsGoBtn.style.height = '0';
-    this._letsGoBtn.style.marginTop = '0';
-    this._letsGoBtn.style.overflow = 'hidden';
+    this._letsGoBtn.style.opacity = '0';
+    clearTimeout(this._letsGoTimer);
+    this._letsGoTimer = setTimeout(() => {
+      if (!this._letsGoHidden) return;
+      this._letsGoBtn.style.height = '0';
+      this._letsGoBtn.style.marginTop = '0';
+      this._letsGoBtn.style.overflow = 'hidden';
+    }, 400);
   }
 
   _showLetsGo() {
     if (!this._letsGoHidden) return;
     this._letsGoHidden = false;
-    this._letsGoBtn.style.opacity = '1';
-    this._letsGoBtn.style.pointerEvents = 'auto';
+    clearTimeout(this._letsGoTimer);
     this._letsGoBtn.style.height = '';
     this._letsGoBtn.style.marginTop = '';
     this._letsGoBtn.style.overflow = '';
+    this._letsGoBtn.style.opacity = '1';
+    this._letsGoBtn.style.pointerEvents = 'auto';
   }
 
   _applyDark(dark) {

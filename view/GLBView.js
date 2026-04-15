@@ -291,14 +291,11 @@ export class GLBView {
         }
       }
       for (const e of this._noiseList2) {
-        const dist = e.sprite.position.distanceTo(camera.position);
-        e.distAlpha = 1 - Math.max(0, Math.min(1, (dist - FOG_NEAR) / range));
-        e.mat.opacity = e.loadAlpha * e.distAlpha;
+        e.mat.opacity = e.loadAlpha;
       }
       if (this._lines2) {
-        for (const { mat, i, j } of this._lines2.lineObjs) {
-          const da = Math.min(this._noiseList2[i].distAlpha, this._noiseList2[j].distAlpha);
-          mat.opacity = this._lines2.loadAlpha * CONNECTION_OPACITY * da;
+        for (const { mat } of this._lines2.lineObjs) {
+          mat.opacity = this._lines2.loadAlpha * CONNECTION_OPACITY;
         }
       }
     }
