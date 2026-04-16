@@ -304,6 +304,7 @@ function init(gltf, projects) {
     if (window.matchMedia('(pointer: coarse)').matches && glbCam.isPerspectiveCamera) {
       glbCam.zoom = 0.42;
       glbCam.updateProjectionMatrix();
+      document.getElementById('toc').style.display = 'none';
     }
     camera = glbCam;
     resizeCamera(camera);
