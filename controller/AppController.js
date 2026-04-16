@@ -150,8 +150,8 @@ export class AppController {
       const startGyro = () => {
         window.addEventListener('deviceorientation', (e) => {
           if (e.gamma === null && e.beta === null) return;
-          this._gyroTargetX = Math.max(-1, Math.min(1,  (e.gamma || 0) / 45));
-          this._gyroTargetY = Math.max(-1, Math.min(1, -((e.beta  || 0) - 45) / 45));
+          this._gyroTargetX = Math.max(-1, Math.min(1, -(e.gamma || 0) / 45));
+          this._gyroTargetY = Math.max(-1, Math.min(1,  ((e.beta  || 0) - 45) / 45));
         });
       };
 
