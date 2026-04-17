@@ -130,7 +130,13 @@ applyDark(isDark);
 document.getElementById('theme-toggle').addEventListener('click', () => {
   isDark = !isDark;
   localStorage.setItem('darkMode', isDark);
-  applyDark(isDark);
+  const overlay = document.getElementById('theme-fade');
+  overlay.style.background = isDark ? '#000' : '#fff';
+  overlay.style.opacity = '1';
+  setTimeout(() => {
+    applyDark(isDark);
+    overlay.style.opacity = '0';
+  }, 250);
 });
 
 let camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.01, 1000);

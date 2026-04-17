@@ -262,3 +262,12 @@ body.dark {
 body:not(.dark) #theme-toggle {
   transform: rotate(180deg);
 }
+
+#theme-fade {
+  position: fixed;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9998;
+  transition: opacity 0.25s ease;
+}

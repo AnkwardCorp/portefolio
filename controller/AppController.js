@@ -136,7 +136,13 @@ export class AppController {
     document.getElementById('theme-toggle').addEventListener('click', () => {
       this._isDark = !this._isDark;
       localStorage.setItem('darkMode', this._isDark);
-      this._applyDark(this._isDark);
+      const overlay = document.getElementById('theme-fade');
+      overlay.style.background = this._isDark ? '#000' : '#fff';
+      overlay.style.opacity = '1';
+      setTimeout(() => {
+        this._applyDark(this._isDark);
+        overlay.style.opacity = '0';
+      }, 250);
     });
 
     window.addEventListener('mousemove', (e) => {
