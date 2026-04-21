@@ -385,7 +385,7 @@ function init(gltf, projects) {
   const maxDim = Math.max(size.x, size.y, size.z);
   spriteSize   = maxDim * 0.35;                        //Taille des sprites dans browse
   noiseAmp     = maxDim * 0.003;
-  arcElevation = maxDim * 0.15;
+  arcElevation = maxDim * 0.18;
 
   // Rotation depuis Sprite_reference
   let spriteRef = null;
