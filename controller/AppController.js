@@ -1,5 +1,4 @@
 import { Clock } from 'three';
-import { Pane } from 'tweakpane';
 import { SceneModel } from '../model/SceneModel.js';
 import { GLBModel } from '../model/GLBModel.js';
 import { SceneView } from '../view/SceneView.js';
@@ -182,38 +181,6 @@ export class AppController {
     }
 
     window.addEventListener('resize', () => this.sceneView.onResize());
-
-    // Tweakpane
-    // this._initPane();
-  }
-
-  _initPane() {
-    const pane = new Pane({ title: `Params (${IS_MOBILE ? 'mobile' : 'desktop'})` });
-
-    const fScroll = pane.addFolder({ title: 'Scroll' });
-    fScroll.addBinding(PARAMS, 'wheelSensitivity',  { min: 0,   max: 0.3,  step: 0.001, label: 'wheel sens.' });
-    fScroll.addBinding(PARAMS, 'touchSensitivity',  { min: 0,   max: 20,   step: 0.1,   label: 'touch sens.' });
-    fScroll.addBinding(PARAMS, 'maxScrollVel',      { min: 1,   max: 60,   step: 0.5,   label: 'max vel.' });
-    fScroll.addBinding(PARAMS, 'scrollFriction',    { min: 0,   max: 0.5,  step: 0.001, label: 'friction' });
-    fScroll.addBinding(PARAMS, 'rotationPerAdvance',{ min: 0,   max: 0.5,  step: 0.001, label: 'rotation/adv.' });
-    fScroll.addBinding(PARAMS, 'maxCameraAdvance',  { min: 1,   max: 30,   step: 0.1,   label: 'max advance' });
-
-    const fTorus = pane.addFolder({ title: 'Torus' });
-    fTorus.addBinding(PARAMS, 'stiffness',    { min: 0, max: 0.3,  step: 0.001, label: 'stiffness' });
-    fTorus.addBinding(PARAMS, 'cameraFollowSpeed', { min: 0.1, max: 20, step: 0.1, label: 'cam follow speed' });
-    fTorus.addBinding(PARAMS, 'damping',      { min: 0, max: 0.3,  step: 0.001, label: 'damping' });
-    fTorus.addBinding(PARAMS, 'torus2Factor', { min: 0, max: 5,    step: 0.01,  label: 'torus2 factor' });
-
-    const fParallax = pane.addFolder({ title: 'Parallax' });
-    fParallax.addBinding(PARAMS, 'parallaxAmp',  { min: 0, max: 1,    step: 0.01,  label: 'amplitude' });
-    fParallax.addBinding(PARAMS, 'parallaxLerp', { min: 0, max: 0.2,  step: 0.001, label: 'lerp' });
-
-    const fUI = pane.addFolder({ title: 'UI' });
-    fUI.addBinding(PARAMS, 'textFadeDuration',      { min: 0.1, max: 2,  step: 0.05,  label: 'text fade dur.' });
-    fUI.addBinding(PARAMS, 'autoAdvanceSpeed',      { min: 0.5, max: 10, step: 0.1,   label: 'lets go speed (desktop)' });
-    fUI.addBinding(PARAMS, 'mobileAdvanceDuration', { min: 0.2, max: 3,  step: 0.05,  label: 'mobile advance dur. (s)' });
-    fUI.addBinding(PARAMS, 'letsGoThreshold',       { min: 0,   max: 1,  step: 0.01,  label: 'lets go hide %' });
-    fUI.addBinding(PARAMS, 'textThreshold',         { min: 0,   max: 1,  step: 0.01,  label: 'text appear %' });
   }
 
   start() {
@@ -274,8 +241,6 @@ export class AppController {
 
     if (this.cameraAdvance >= PARAMS.maxCameraAdvance * PARAMS.letsGoThreshold) this._hideLetsGo();
     else if (!this._autoAdvance) this._showLetsGo();
-
-    this.sceneView.setScrollVelocity(this.cameraAdvanceVel);
 
     // Gyroscope mobile — lissage et alimentation du parallax
     if (IS_MOBILE) {
@@ -374,7 +339,6 @@ export class AppController {
 
   _applyDark(dark) {
     document.body.classList.toggle('dark', dark);
-    this.sceneView.setBackground(dark);
     this.glbView.setLineColor(dark ? 0xffffff : 0x999999);
     document.getElementById('theme-toggle').textContent = dark ? '☀' : '☽';
   }

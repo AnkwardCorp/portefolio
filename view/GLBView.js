@@ -15,7 +15,7 @@ function shuffled(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
-} //looat
+}
 
 const CORNER_RADIUS = 0.05; // Corner radius des sprites 0,5 = cercles
 
@@ -27,6 +27,7 @@ function loadRoundedTexture(path) {
   canvas.height = size;
   const ctx = canvas.getContext('2d');
   const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
 
   const img = new Image();
   img.onload = () => {
@@ -143,6 +144,9 @@ export class GLBView {
     this._spritesReady = false;
     this._raycaster = new THREE.Raycaster();
     this._pointer = new THREE.Vector2(9999, 9999);
+    this._allSprites = [];
+    this._hoverHits = new Set();
+    this._raycastFrame = 0;
     scene.add(this.group);
     scene.add(this.group2);
 
@@ -217,6 +221,12 @@ export class GLBView {
         this._lines1 = buildConnectionLines(this._noiseList1, this.group);
         this._lines2 = buildConnectionLines(this._noiseList2, this.group2);
 
+        // Cache la liste des sprites pour le raycasting (évite un rebuild par frame)
+        this._allSprites = [
+          ...this._noiseList1.map(e => e.sprite),
+          ...this._noiseList2.map(e => e.sprite),
+        ];
+
         // Fade-in des lignes après l'apparition des sprites
         if (this._lines1) this._fadeList.push({ lineData: this._lines1, delay: STAGGER_TOTAL });
         if (this._lines2) this._fadeList.push({ lineData: this._lines2, delay: STAGGER_TOTAL });
@@ -279,9 +289,13 @@ export class GLBView {
     // Opacité basée sur la distance caméra (remplace le fog)
     if (camera) {
       const range = FOG_FAR - FOG_NEAR;
+      const nearSq = FOG_NEAR * FOG_NEAR;
+      const farSq = FOG_FAR * FOG_FAR;
       for (const e of this._noiseList1) {
-        const dist = e.sprite.position.distanceTo(camera.position);
-        e.distAlpha = 1 - Math.max(0, Math.min(1, (dist - FOG_NEAR) / range));
+        const distSq = e.sprite.position.distanceToSquared(camera.position);
+        if (distSq <= nearSq) e.distAlpha = 1;
+        else if (distSq >= farSq) e.distAlpha = 0;
+        else e.distAlpha = 1 - (Math.sqrt(distSq) - FOG_NEAR) / range;
         e.mat.opacity = e.loadAlpha * e.distAlpha;
       }
       if (this._lines1) {
@@ -300,14 +314,15 @@ export class GLBView {
       }
     }
 
-    // Hover scale — raycasting + lerp fluide
-    if (camera) {
-      this._raycaster.setFromCamera(this._pointer, camera);
-      const allSprites = [
-        ...this._noiseList1.map(e => e.sprite),
-        ...this._noiseList2.map(e => e.sprite),
-      ];
-      const hit = new Set(this._raycaster.intersectObjects(allSprites, false).map(h => h.object));
+    // Hover scale — raycasting throttlé 1 frame sur 2 + lerp fluide chaque frame
+    if (camera && this._allSprites.length > 0) {
+      if ((this._raycastFrame++ & 1) === 0) {
+        this._raycaster.setFromCamera(this._pointer, camera);
+        const intersects = this._raycaster.intersectObjects(this._allSprites, false);
+        this._hoverHits.clear();
+        for (const h of intersects) this._hoverHits.add(h.object);
+      }
+      const hit = this._hoverHits;
       const lerpFactor = Math.min(1, delta * HOVER_LERP);
       for (const e of this._noiseList1) {
         e.hoverScale += ((hit.has(e.sprite) ? HOVER_SCALE : 1.0) - e.hoverScale) * lerpFactor;

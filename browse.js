@@ -4,6 +4,8 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 
+
+
 if (window.matchMedia('(pointer: coarse)').matches) {
   document.getElementById('toc').style.display = 'none';
 }
@@ -69,6 +71,7 @@ function loadRoundedTexture(path, onReady) {
   cvs.height = size;
   const ctx  = cvs.getContext('2d');
   const tex  = new THREE.CanvasTexture(cvs);
+  tex.colorSpace = THREE.SRGBColorSpace;
   const img  = new Image();
   img.onload = () => {
     ctx.save();
@@ -99,22 +102,12 @@ function loadRoundedTexture(path, onReady) {
 
 const canvas = document.getElementById('canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x000000, 0);
-
-function createGradientTexture(colorTop, colorBottom) {
-  const cvs = document.createElement('canvas');
-  cvs.width  = 2;
-  cvs.height = 256;
-  const ctx  = cvs.getContext('2d');
-  const grad = ctx.createLinearGradient(0, 0, 0, 256);
-  grad.addColorStop(0, colorTop);
-  grad.addColorStop(1, colorBottom);
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 2, 256);
-  return new THREE.CanvasTexture(cvs);
-}
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+//renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1;
 
 const scene = new THREE.Scene();
 // Pas de scene.background — le gradient est rendu par le body CSS
@@ -141,11 +134,11 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
 
 let camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.01, 1000);
 
-const postStartTime = performance.now();
 let renderPass = new RenderPass(scene, camera);
 const composer = new EffectComposer(renderer);
 composer.addPass(renderPass);
 const grainPass = new ShaderPass(GrainShader);
+grainPass.enabled = false;
 composer.addPass(grainPass);
 
 function resizeCamera(cam) {
@@ -629,6 +622,5 @@ const clock = new THREE.Clock();
   const hoverTarget = isHoveringSelected ? HOVER_SCALE_BOOST : 1.0;
   hoverScale += (hoverTarget - hoverScale) * Math.min(1, rawDelta * 10);
 
-  grainPass.uniforms.time.value = ((performance.now() - postStartTime) * 0.001) % 100.0;
   composer.render();
 }());
