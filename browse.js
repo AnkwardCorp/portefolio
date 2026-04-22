@@ -98,9 +98,10 @@ function loadRoundedTexture(path, onReady) {
 // ── Renderer ──────────────────────────────────────────────────────────────────
 
 const canvas = document.getElementById('canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x000000, 0);
 
 function createGradientTexture(colorTop, colorBottom) {
   const cvs = document.createElement('canvas');
@@ -116,14 +117,13 @@ function createGradientTexture(colorTop, colorBottom) {
 }
 
 const scene = new THREE.Scene();
-scene.background = createGradientTexture('#ffffff', '#B5B5B5');
+// Pas de scene.background — le gradient est rendu par le body CSS
 
 // ── Dark mode ─────────────────────────────────────────────────────────────────
 
 let isDark = localStorage.getItem('darkMode') === 'true';
 function applyDark(dark) {
   document.body.classList.toggle('dark', dark);
-  scene.background = dark ? createGradientTexture('#1E1E1E', '#000000') : createGradientTexture('#ffffff', '#B5B5B5');
   document.getElementById('theme-toggle').textContent = dark ? '☀' : '☽';
 }
 applyDark(isDark);

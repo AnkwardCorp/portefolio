@@ -77,13 +77,13 @@ export class SceneView {
     this._startTime = performance.now();
 
     // Renderer
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setClearColor(0x000000, 0);
 
-    // Scene
+    // Scene (pas de background — le gradient est rendu par le body CSS)
     this.scene = new THREE.Scene();
-    this.scene.background = createGradientTexture('#ffffff', '#B5B5B5'); 
 
     // Camera
     this.camera = new THREE.PerspectiveCamera(
@@ -140,12 +140,8 @@ export class SceneView {
     }
   }
 
-  setBackground(dark) {
-    if (!dark) {
-      this.scene.background = createGradientTexture('#ffffff', '#DADADA');
-    } else {
-      this.scene.background = createGradientTexture('#1E1E1E', '#000000');
-    }
+  setBackground(_dark) {
+    // Le gradient est géré par le body CSS (classe .dark)
   }
 
   onResize() {
