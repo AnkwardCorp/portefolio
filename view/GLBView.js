@@ -293,9 +293,13 @@ export class GLBView {
       const farSq = FOG_FAR * FOG_FAR;
       for (const e of this._noiseList1) {
         const distSq = e.sprite.position.distanceToSquared(camera.position);
-        if (distSq <= nearSq) e.distAlpha = 1;
-        else if (distSq >= farSq) e.distAlpha = 0;
-        else e.distAlpha = 1 - (Math.sqrt(distSq) - FOG_NEAR) / range;
+        if (distSq <= nearSq) { e.distAlpha = 1; e.sizeScale = 1; }
+        else if (distSq >= farSq) { e.distAlpha = 0; e.sizeScale = 0.1; }
+        else {
+          const f = (Math.sqrt(distSq) - FOG_NEAR) / range;
+          e.distAlpha = 1 - f;
+          e.sizeScale = 1 - f * 0.3;
+        }
         e.mat.opacity = e.loadAlpha * e.distAlpha;
       }
       if (this._lines1) {
@@ -305,6 +309,10 @@ export class GLBView {
         }
       }
       for (const e of this._noiseList2) {
+        const distSq = e.sprite.position.distanceToSquared(camera.position);
+        if (distSq <= nearSq) { e.sizeScale = 1; }
+        else if (distSq >= farSq) { e.sizeScale = 0.7; }
+        else { e.sizeScale = 1 - (Math.sqrt(distSq) - FOG_NEAR) / range * 0.3; }
         e.mat.opacity = e.loadAlpha;
       }
       if (this._lines2) {
@@ -326,11 +334,11 @@ export class GLBView {
       const lerpFactor = Math.min(1, delta * HOVER_LERP);
       for (const e of this._noiseList1) {
         e.hoverScale += ((hit.has(e.sprite) ? HOVER_SCALE : 1.0) - e.hoverScale) * lerpFactor;
-        e.sprite.scale.setScalar(SPRITE_SIZE * e.hoverScale);
+        e.sprite.scale.setScalar(SPRITE_SIZE * e.hoverScale * (e.sizeScale ?? 1));
       }
       for (const e of this._noiseList2) {
         e.hoverScale += ((hit.has(e.sprite) ? HOVER_SCALE : 1.0) - e.hoverScale) * lerpFactor;
-        e.sprite.scale.setScalar(SPRITE_SIZE * e.hoverScale);
+        e.sprite.scale.setScalar(SPRITE_SIZE * e.hoverScale * (e.sizeScale ?? 1));
       }
     }
 
