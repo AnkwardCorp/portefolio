@@ -340,6 +340,6 @@ export class AppController {
   _applyDark(dark) {
     document.body.classList.toggle('dark', dark);
     this.glbView.setLineColor(dark ? 0xffffff : 0x999999);
-    document.getElementById('theme-toggle').textContent = dark ? '☀' : '☽';
+    document.getElementById('theme-toggle').textContent = dark ? '🌞' : '🌙';
   }
 }
