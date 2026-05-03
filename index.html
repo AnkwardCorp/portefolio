@@ -35,10 +35,13 @@
           <button id="lets-go-btn">Let's go!</button>
           <div id="scroll-text">
             <p>I am Amin, a designer who creates and develops concepts and ideas. I’ve been doing this for years with clients around the world. I enjoy exploring, experimenting, failing, and starting again—until it leads to something meaningful. Here are some of my personal and professional creations. I’m always open to collaborating on new projects.</p>
-            <div id="browse-wrapper">
-              <span class="browse-arrow">→</span>
-              <a id="browse-btn" href="browse.html">Browse projects</a>
-              <span class="browse-arrow">←</span>
+            <div id="links-section">
+              <span id="arrow-left" class="browse-arrow">→</span>
+              <div id="links-column">
+                <a id="browse-btn" href="browse.html">Browse projects</a>
+                <a id="blog-btn" href="blog.html" target="_blank">Blog</a>
+              </div>
+              <span id="arrow-right" class="browse-arrow">←</span>
             </div>
           </div>
         </div>
@@ -49,6 +52,22 @@
       document.getElementById('email-wrapper').addEventListener('click', function () {
         this.classList.toggle('revealed');
       });
+
+      const arrowLeft  = document.getElementById('arrow-left');
+      const arrowRight = document.getElementById('arrow-right');
+      const browseBtn  = document.getElementById('browse-btn');
+      const blogBtn    = document.getElementById('blog-btn');
+
+      function moveArrows(ty) {
+        arrowLeft.style.transform  = `translateY(${ty}px)`;
+        arrowRight.style.transform = `translateY(${ty}px)`;
+      }
+
+      browseBtn.addEventListener('mouseenter', () => moveArrows(0));
+      blogBtn.addEventListener('mouseenter', () => {
+        moveArrows(blogBtn.getBoundingClientRect().top - browseBtn.getBoundingClientRect().top);
+      });
+      blogBtn.addEventListener('mouseleave', () => moveArrows(0));
     </script>
     <script type="module" src="main.js"></script>
   </body>

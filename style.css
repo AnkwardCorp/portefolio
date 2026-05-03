@@ -129,14 +129,20 @@ body.dark {
   line-height: 1.6;
 }
 
-#browse-wrapper {
+#links-section {
   margin-top: 20px;
-  text-align: center;
-  pointer-events: auto;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   gap: 12px;
+  pointer-events: auto;
+}
+
+#links-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .browse-arrow {
@@ -144,10 +150,12 @@ body.dark {
   font-size: 14px;
   font-weight: 400;
   color: var(--text-primary);
-  transition: color 0.4s ease;
+  transition: color 0.4s ease, transform 0.25s ease;
+  pointer-events: none;
+  line-height: 1.4;
 }
 
-#browse-btn {
+#browse-btn, #blog-btn {
   color: var(--text-primary);
   text-decoration: underline;
   font-family: 'Roboto', sans-serif;
