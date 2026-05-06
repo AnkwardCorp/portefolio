@@ -1,4 +1,4 @@
-import { Clock } from 'three';
+import { Clock, Vector3 } from 'three';
 import { SceneModel } from '../model/SceneModel.js';
 import { GLBModel } from '../model/GLBModel.js';
 import { SceneView } from '../view/SceneView.js';
@@ -48,8 +48,20 @@ export class AppController {
 
     this.mouseNormX = 0;
     this.mouseNormY = 0;
+    this._mouseClientX = 0;
+    this._mouseClientY = 0;
     this.cameraMouseX = 0;
     this.cameraMouseY = 0;
+
+    // Tooltip sprite
+    this._spriteNotes = [];
+    this._tooltipEl = document.createElement('div');
+    this._tooltipEl.style.cssText = 'position:fixed;pointer-events:none;z-index:100;background:rgba(255,255,255,0.72);color:#000;padding:6px 11px;border-radius:8px;font-size:13px;white-space:nowrap;opacity:0;transition:opacity 0.18s ease;font-family:Roboto,sans-serif;';
+    document.body.appendChild(this._tooltipEl);
+    this._tooltipVisible = false;
+    this._tooltipHideTimer = null;
+    this._prevHoveredSprite = null;
+    fetch('./User_note.json').then(r => r.json()).then(d => { this._spriteNotes = d.followerTexts || []; });
 
     this._gyroX = 0;
     this._gyroY = 0;
@@ -76,6 +88,7 @@ export class AppController {
     this.headerSubtitleEl = document.getElementById('header-subtitle');
     this.headerTextChanged = false;
     this._autoAdvance = false;
+    this._cameraMaxReached = false;
     this._letsGoBtn = document.getElementById('lets-go-btn');
     this._letsGoHidden = false;
 
@@ -147,6 +160,8 @@ export class AppController {
     window.addEventListener('mousemove', (e) => {
       this.mouseNormX =  (e.clientX / window.innerWidth  - 0.5) * 2;
       this.mouseNormY = -(e.clientY / window.innerHeight - 0.5) * 2;
+      this._mouseClientX = e.clientX;
+      this._mouseClientY = e.clientY;
       this.glbView.setPointer(this.mouseNormX, this.mouseNormY);
     });
 
@@ -230,7 +245,13 @@ export class AppController {
       const speed = PARAMS.maxCameraAdvance / PARAMS.mobileAdvanceDuration;
       this.cameraAdvance = Math.min(this.cameraAdvance + speed * rawDelta, PARAMS.maxCameraAdvance);
       this.targetCameraAdvance = this.cameraAdvance;
-      if (this.cameraAdvance >= PARAMS.maxCameraAdvance) this._autoAdvance = false;
+      if (this.cameraAdvance >= PARAMS.maxCameraAdvance) {
+        this._autoAdvance = false;
+        if (!this._cameraMaxReached) {
+          this._cameraMaxReached = true;
+          window.dispatchEvent(new CustomEvent('cameraAtMax'));
+        }
+      }
     } else {
       // Spring exponentiel pour le scroll manuel
       this.cameraAdvance += (this.targetCameraAdvance - this.cameraAdvance) * camAlpha;
@@ -308,6 +329,38 @@ export class AppController {
         this.headerSubtitleEl.style.opacity = '1';
       }, 400);
     }
+
+    // Tooltip sprite — positionné sur le sprite en espace écran
+    const hovered = this.glbView.hoveredSprite;
+    if (hovered && this._spriteNotes.length > 0) {
+      if (hovered !== this._prevHoveredSprite) {
+        // Nouveau sprite : cacher immédiatement et attendre 1s avant d'afficher
+        clearTimeout(this._tooltipHideTimer);
+        this._tooltipEl.style.opacity = '0';
+        this._tooltipVisible = false;
+        const text = this._spriteNotes[Math.floor(Math.random() * this._spriteNotes.length)];
+        this._tooltipHideTimer = setTimeout(() => {
+          if (this.glbView.hoveredSprite === hovered) {
+            this._tooltipEl.textContent = text;
+            this._tooltipEl.style.opacity = '1';
+            this._tooltipVisible = true;
+          }
+        }, 200);
+      }
+      // Mettre à jour la position chaque frame
+      const worldPos = hovered.getWorldPosition(new Vector3());
+      worldPos.project(this.sceneView.camera);
+      const sx = ( worldPos.x * 0.5 + 0.5) * window.innerWidth;
+      const sy = (-worldPos.y * 0.5 + 0.5) * window.innerHeight;
+      const hw = this._tooltipEl.offsetWidth / 2;
+      this._tooltipEl.style.left = `${sx - hw}px`;
+      this._tooltipEl.style.top  = `${sy + 28}px`;
+    } else if (this._tooltipVisible) {
+      clearTimeout(this._tooltipHideTimer);
+      this._tooltipEl.style.opacity = '0';
+      this._tooltipVisible = false;
+    }
+    this._prevHoveredSprite = hovered;
 
     this.sceneView.render();
   }

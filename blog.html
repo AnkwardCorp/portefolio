@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AnkwardCorp: Ideas</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&display=swap" />
+    <style>
+      canvas { display: block; }
+
+      #ui {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        font-family: 'Roboto', sans-serif;
+        font-size: 12px;
+        font-weight: 300;
+        letter-spacing: 0.02em;
+        color: var(--text-primary);
+      }
+
+      #nav {
+        position: absolute;
+        top: 7%;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none;
+      }
+
+      #btn-prev, #btn-next {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 22px;
+        padding: 8px;
+        color: var(--text-primary);
+        transition: color 0.4s;
+        pointer-events: all;
+      }
+
+      #btn-prev { left: 14%; }
+      #btn-next { right: 14%; }
+      #btn-prev:hover, #btn-next:hover { opacity: 0.4; }
+
+      .nav-line {
+        flex: 1;
+        height: 1px;
+        background: var(--text-primary);
+        transition: background 0.4s;
+      }
+
+      #sprite-name {
+        white-space: nowrap;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+        text-decoration-thickness: 1px;
+        font-size: 12px;
+        min-width: 80px;
+        text-align: center;
+      }
+
+      #center-line {
+        position: absolute;
+        top: calc(7% + 26px);
+        left: 50%;
+        transform: translateX(-50%);
+        width: 1px;
+        height: 30vh;
+        background: var(--text-primary);
+        transition: background 0.4s;
+      }
+
+      #info-left {
+        position: absolute;
+        bottom: 11%;
+        left: 8%;
+        line-height: 1.9;
+      }
+
+      #info-right {
+        position: absolute;
+        bottom: 11%;
+        right: 7%;
+        width: 210px;
+        pointer-events: all;
+        transform-origin: bottom right;
+        transition: transform 0.3s ease;
+      }
+
+      #info-right:hover { transform: scale(1.18); }
+
+      #info-right .desc-title { margin-bottom: 10px; }
+
+      #info-right .desc-body {
+        text-align: justify;
+        line-height: 1.65;
+        font-size: 11.5px;
+      }
+
+      #project-link { pointer-events: all; }
+      #project-link:hover { opacity: 0.5; }
+
+      @media (max-width: 768px), (pointer: coarse) {
+        #info-right, #info-left, #toc { display: none; }
+      }
+
+      #btn-back {
+        position: absolute;
+        top: 7%;
+        left: 4%;
+        text-decoration: none;
+        color: var(--text-primary);
+        font-size: 14px;
+        pointer-events: all;
+        transition: opacity 0.2s, color 0.4s;
+      }
+
+      #btn-back:hover { opacity: 0.4; }
+
+      #toc {
+        position: absolute;
+        top: 8%;
+        right: 7%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        text-align: right;
+      }
+
+      .toc-item {
+        font-size: 11px;
+        opacity: 0.35;
+        cursor: pointer;
+        pointer-events: all;
+        transition: opacity 0.3s, font-size 0.3s, padding-right 0.3s;
+        white-space: nowrap;
+      }
+
+      .toc-item:hover { opacity: 0.6; }
+
+      .toc-item.active {
+        opacity: 1;
+        font-size: 12px;
+        padding-right: 16px;
+      }
+    </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+    </script>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+
+    <div id="ui">
+      <a id="btn-back" href="index.html">&#8592;</a>
+      <div id="nav">
+        <span id="sprite-name">—</span>
+      </div>
+      <div id="center-line"></div>
+
+      <div id="info-left">
+        <p>Client : <span id="info-client">//</span></p>
+        <p>Owner : <span id="info-owner">Amin Ankward</span></p>
+        <p>Soft and tech used : <span id="info-tech">Blender, ThreeJS</span></p>
+      </div>
+
+      <div id="toc"></div>
+
+      <div id="info-right">
+        <p class="desc-title">Idea description</p>
+        <p class="desc-body"></p>
+        <br>
+        <a id="project-link" href="#" target="_blank" rel="noopener" style="display:none; font-size:11.5px; color:var(--text-primary); text-decoration:underline; text-underline-offset:3px;">Voir le projet ↗</a>
+      </div>
+    </div>
+
+    <div id="theme-fade"></div>
+    <button id="theme-toggle" aria-label="Toggle dark mode">&#9789;</button>
+    <script type="module" src="ideas.js"></script>
+  </body>
+</html>

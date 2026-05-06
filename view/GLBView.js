@@ -140,6 +140,7 @@ export class GLBView {
     this._lines1 = null;
     this._lines2 = null;
     this._elapsed = 0;
+    this._fadeElapsed = null; // démarre uniquement après le chargement du GLB
     this._onAllSpritesVisible = onAllSpritesVisible;
     this._spritesReady = false;
     this._raycaster = new THREE.Raycaster();
@@ -147,6 +148,7 @@ export class GLBView {
     this._allSprites = [];
     this._hoverHits = new Set();
     this._raycastFrame = 0;
+    this._hoveredSprite = null;
     scene.add(this.group);
     scene.add(this.group2);
 
@@ -190,6 +192,7 @@ export class GLBView {
 
         const total = torus1Vertices.length + torus2Vertices.length;
         let globalIdx = 0;
+        this._fadeElapsed = 0; // démarre le timer d'animation
 
         torus1Vertices.forEach((pos, i) => {
           const tex = loadRoundedTexture(randomProfilePics[i % randomProfilePics.length]);
@@ -198,7 +201,7 @@ export class GLBView {
           sprite.position.copy(pos);
           sprite.scale.setScalar(SPRITE_SIZE);
           this.group.add(sprite);
-          const entry = { sprite, mat, base: pos.clone(), loadAlpha: 0, hoverScale: 1.0, phaseX: Math.random() * Math.PI * 2, phaseY: Math.random() * Math.PI * 2 };
+          const entry = { sprite, mat, base: pos.clone(), loadAlpha: 0, loadScale: 0, hoverScale: 1.0, phaseX: Math.random() * Math.PI * 2, phaseY: Math.random() * Math.PI * 2 };
           this._fadeList.push({ entry, delay: (globalIdx / total) * STAGGER_TOTAL });
           this._noiseList1.push(entry);
           globalIdx++;
@@ -211,7 +214,7 @@ export class GLBView {
           sprite.position.copy(pos);
           sprite.scale.setScalar(SPRITE_SIZE);
           this.group2.add(sprite);
-          const entry = { sprite, mat, base: pos.clone(), loadAlpha: 0, hoverScale: 1.0, phaseX: Math.random() * Math.PI * 2, phaseY: Math.random() * Math.PI * 2 };
+          const entry = { sprite, mat, base: pos.clone(), loadAlpha: 0, loadScale: 0, hoverScale: 1.0, phaseX: Math.random() * Math.PI * 2, phaseY: Math.random() * Math.PI * 2 };
           this._fadeList.push({ entry, delay: (globalIdx / total) * STAGGER_TOTAL });
           this._noiseList2.push(entry);
           globalIdx++;
@@ -255,16 +258,18 @@ export class GLBView {
 
   update(delta, camera) {
     this._elapsed += delta;
+    if (this._fadeElapsed !== null) this._fadeElapsed += delta;
 
     if (this._fadeList.length > 0) {
       this._fadeList = this._fadeList.filter(({ entry, mat, lineData, delay, targetOpacity = 1 }) => {
-        const t = Math.min((this._elapsed - delay) / FADE_DURATION, 1);
+        const t = Math.min((this._fadeElapsed - delay) / FADE_DURATION, 1);
         if (t <= 0) return true;
         const smooth = t * t * (3 - 2 * t);
         if (lineData) {
           lineData.loadAlpha = smooth;
         } else if (entry) {
           entry.loadAlpha = smooth * targetOpacity;
+          entry.loadScale = smooth;
         } else {
           mat.opacity = smooth * targetOpacity;
         }
@@ -329,16 +334,17 @@ export class GLBView {
         const intersects = this._raycaster.intersectObjects(this._allSprites, false);
         this._hoverHits.clear();
         for (const h of intersects) this._hoverHits.add(h.object);
+        this._hoveredSprite = intersects.length > 0 ? intersects[0].object : null;
       }
       const hit = this._hoverHits;
       const lerpFactor = Math.min(1, delta * HOVER_LERP);
       for (const e of this._noiseList1) {
         e.hoverScale += ((hit.has(e.sprite) ? HOVER_SCALE : 1.0) - e.hoverScale) * lerpFactor;
-        e.sprite.scale.setScalar(SPRITE_SIZE * e.hoverScale * (e.sizeScale ?? 1));
+        e.sprite.scale.setScalar(SPRITE_SIZE * e.hoverScale * (e.sizeScale ?? 1) * (e.loadScale ?? 1));
       }
       for (const e of this._noiseList2) {
         e.hoverScale += ((hit.has(e.sprite) ? HOVER_SCALE : 1.0) - e.hoverScale) * lerpFactor;
-        e.sprite.scale.setScalar(SPRITE_SIZE * e.hoverScale * (e.sizeScale ?? 1));
+        e.sprite.scale.setScalar(SPRITE_SIZE * e.hoverScale * (e.sizeScale ?? 1) * (e.loadScale ?? 1));
       }
     }
 
@@ -346,6 +352,8 @@ export class GLBView {
     updateConnectionLines(this._lines1, this._noiseList1);
     updateConnectionLines(this._lines2, this._noiseList2);
   }
+
+  get hoveredSprite() { return this._hoveredSprite; }
 
   setPointer(x, y) {
     this._pointer.set(x, y);
