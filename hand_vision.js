@@ -162,6 +162,8 @@ let sorted      = [];
 let handLandmarker  = null;
 let handVideoEl     = null;
 let handPreviewEl   = null;
+let handCanvasEl    = null;
+let handSkelCtx     = null;
 let prevHandX       = null;
 let prevHandY       = null;
 let smoothHandX     = null;
@@ -169,16 +171,45 @@ let smoothHandY     = null;
 let handVelX        = 0;
 let handVelY        = 0;
 let handDetected    = false;
+let lastHandDetectTime = 0;
+const HAND_DETECT_INTERVAL = 1000 / 20; // 20 fps
+
+
+// Détection de la pince : pouce (4) et index (8) proches l'un de l'autre, normalisé par la taille de la main
+function isPinch(landmarks) {
+  const thumbTip  = landmarks[4];
+  const indexTip  = landmarks[8];
+  const wrist     = landmarks[0];
+  const middleMcp = landmarks[9];
+  const handSize  = Math.hypot(middleMcp.x - wrist.x, middleMcp.y - wrist.y);
+  const dist      = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
+  return handSize > 0.01 && dist / handSize < 0.4;
+}
 
 async function initHandTracking() {
-  // Prévisualisation webcam (coin bas-droit, miroir)
+  // Prévisualisation webcam (coin bas-droit, miroir, noir et blanc)
   handPreviewEl = document.createElement('div');
-  handPreviewEl.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:20;border-radius:10px;overflow:hidden;width:160px;opacity:0.7;box-shadow:0 2px 12px rgba(0,0,0,0.4);';
+  handPreviewEl.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:20;border-radius:10px;overflow:hidden;width:200px;opacity:0.85;box-shadow:0 2px 16px rgba(0,0,0,0.5);';
   handVideoEl = document.createElement('video');
-  handVideoEl.style.cssText = 'width:160px;display:block;transform:scaleX(-1);';
+  handVideoEl.style.cssText = 'width:200px;display:block;transform:scaleX(-1);filter:grayscale(1);';
   handVideoEl.autoplay = true;
   handVideoEl.playsInline = true;
   handPreviewEl.appendChild(handVideoEl);
+
+  // Canvas squelette (pas de transform CSS — on miroir les x dans le dessin)
+  handCanvasEl = document.createElement('canvas');
+  handCanvasEl.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;';
+  handCanvasEl.width  = 200;
+  handCanvasEl.height = 150;
+  handPreviewEl.appendChild(handCanvasEl);
+  handSkelCtx = handCanvasEl.getContext('2d');
+  handVideoEl.addEventListener('loadedmetadata', () => {
+    const h = Math.round(200 * handVideoEl.videoHeight / handVideoEl.videoWidth);
+    handCanvasEl.width  = 200;
+    handCanvasEl.height = h;
+    handCanvasEl.style.width  = '200px';
+    handCanvasEl.style.height = h + 'px';
+  });
 
   // Indicateur "main détectée"
   const dot = document.createElement('div');
@@ -187,8 +218,18 @@ async function initHandTracking() {
   handPreviewEl.appendChild(dot);
   document.body.appendChild(handPreviewEl);
 
+  // Bouton toggle caméra
+  const camToggleBtn = document.getElementById('cam-toggle');
+  if (camToggleBtn) {
+    camToggleBtn.addEventListener('click', () => {
+      const hidden = handPreviewEl.style.display === 'none';
+      handPreviewEl.style.display = hidden ? '' : 'none';
+      camToggleBtn.classList.toggle('cam-off', !hidden);
+    });
+  }
+
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 24, max: 24 } } });
     handVideoEl.srcObject = stream;
   } catch (e) {
     console.warn('[hand_vision] Caméra non disponible:', e);
@@ -239,6 +280,7 @@ const MAX_DRAG_VEL       = 12;    // rad/s max pour éviter les rotations folles
 const HAND_SMOOTH        = 0.15;  // EMA alpha : 0 = figé, 1 = brut (plus bas = plus smooth)
 const HAND_SENSITIVITY   = 4;     // amplification de la rotation par mouvement de main
 const HAND_MAX_DELTA     = 0.03;  // déplacement normalisé max accepté par frame (anti-saut)
+const HAND_BRAKE_SPEED   = 18;    // vitesse de freinage au poing (plus haut = stop plus vite)
 
 // ── Utilitaires UI ────────────────────────────────────────────────────────────
 
@@ -649,59 +691,110 @@ const clock = new THREE.Clock();
     le.line.geometry.attributes.position.needsUpdate = true;
   }
 
-  // ── Hand tracking — rotation de la sphère ────────────────────────────────────
-  if (handLandmarker && handVideoEl && handVideoEl.readyState >= 2) {
-    const results = handLandmarker.detectForVideo(handVideoEl, performance.now());
+  // ── Hand tracking — pince = attraper, relâcher = lancer ─────────────────────
+  const handNow = performance.now();
+  if (handLandmarker && handVideoEl && handVideoEl.readyState >= 2 &&
+      handNow - lastHandDetectTime >= HAND_DETECT_INTERVAL) {
+    lastHandDetectTime = handNow;
+    const results = handLandmarker.detectForVideo(handVideoEl, handNow);
     handDetected = results.landmarks?.length > 0;
 
-    // Indicateur visuel
     const dot = document.getElementById('hand-dot');
-    if (dot) dot.style.background = handDetected ? '#4caf50' : '#888';
+
+    // Effacer le canvas squelette
+    if (handSkelCtx) handSkelCtx.clearRect(0, 0, handCanvasEl.width, handCanvasEl.height);
 
     if (handDetected) {
-      const palm = results.landmarks[0][9]; // milieu de la paume
-      const hx = 1 - palm.x;               // miroir horizontal
-      const hy = palm.y;
+      const landmarks = results.landmarks[0];
+      const pinching  = isPinch(landmarks);
+      if (dot) dot.style.background = pinching ? '#4caf50' : '#888';
 
-      // Initialisation ou filtre passe-bas (EMA) sur la position brute
-      if (smoothHandX === null) {
-        smoothHandX = hx;
-        smoothHandY = hy;
-      } else {
-        smoothHandX += (hx - smoothHandX) * HAND_SMOOTH;
-        smoothHandY += (hy - smoothHandY) * HAND_SMOOTH;
-      }
-
-      if (prevHandX !== null) {
-        // Clamp du delta pour absorber les sauts brusques de MediaPipe
-        const dx = Math.max(-HAND_MAX_DELTA, Math.min(HAND_MAX_DELTA, smoothHandX - prevHandX));
-        const dy = Math.max(-HAND_MAX_DELTA, Math.min(HAND_MAX_DELTA, smoothHandY - prevHandY));
-        if (Math.abs(dx) + Math.abs(dy) > 0.001) {
-          handVelY = dx * HAND_SENSITIVITY;
-          handVelX = dy * HAND_SENSITIVITY;
-          const qY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), handVelY);
-          const qX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), handVelX);
-          group.quaternion.premultiply(qY).premultiply(qX);
-          targetGroupQuat.copy(group.quaternion);
-          isCoasting = false;
+      // Squelette (x miroir pour aligner avec la vidéo flippée par CSS)
+      if (handSkelCtx) {
+        const cw = handCanvasEl.width;
+        const ch = handCanvasEl.height;
+        const mx = (x) => (1 - x) * cw;
+        const my = (y) => y * ch;
+        const connections = [
+          [0,1],[1,2],[2,3],[3,4],
+          [0,5],[5,6],[6,7],[7,8],
+          [5,9],[9,10],[10,11],[11,12],
+          [9,13],[13,14],[14,15],[15,16],
+          [13,17],[17,18],[18,19],[19,20],
+          [0,17],
+        ];
+        handSkelCtx.lineWidth   = 1.5;
+        handSkelCtx.strokeStyle = pinching ? '#4caf50' : '#ffffff';
+        handSkelCtx.globalAlpha = 0.8;
+        for (const [a, b] of connections) {
+          handSkelCtx.beginPath();
+          handSkelCtx.moveTo(mx(landmarks[a].x), my(landmarks[a].y));
+          handSkelCtx.lineTo(mx(landmarks[b].x), my(landmarks[b].y));
+          handSkelCtx.stroke();
+        }
+        handSkelCtx.fillStyle   = '#ffffff';
+        handSkelCtx.globalAlpha = 0.95;
+        for (const pt of landmarks) {
+          handSkelCtx.beginPath();
+          handSkelCtx.arc(mx(pt.x), my(pt.y), 2.5, 0, Math.PI * 2);
+          handSkelCtx.fill();
+        }
+        handSkelCtx.fillStyle   = pinching ? '#4caf50' : '#cccccc';
+        handSkelCtx.globalAlpha = 1;
+        for (const idx of [4, 8]) {
+          handSkelCtx.beginPath();
+          handSkelCtx.arc(mx(landmarks[idx].x), my(landmarks[idx].y), 5, 0, Math.PI * 2);
+          handSkelCtx.fill();
         }
       }
-      prevHandX = smoothHandX;
-      prevHandY = smoothHandY;
-    } else {
-      // Transfert de vélocité vers l'inertie du drag au moment où la main disparaît
-      if (prevHandX !== null && (Math.abs(handVelX) + Math.abs(handVelY)) > 0.001) {
-        const dt = Math.max(rawDelta, 0.008);
-        dragVelX = Math.max(-MAX_DRAG_VEL, Math.min(MAX_DRAG_VEL, handVelX / dt));
-        dragVelY = Math.max(-MAX_DRAG_VEL, Math.min(MAX_DRAG_VEL, handVelY / dt));
-        isCoasting = true;
+
+      if (pinching) {
+        // Pince fermée : suivre le point milieu pouce-index et injecter la vélocité
+        const thumbTip = landmarks[4];
+        const indexTip = landmarks[8];
+        const hx = 1 - (thumbTip.x + indexTip.x) / 2; // miroir horizontal
+        const hy =     (thumbTip.y + indexTip.y) / 2;
+
+        if (smoothHandX === null) {
+          smoothHandX = hx;
+          smoothHandY = hy;
+        } else {
+          smoothHandX += (hx - smoothHandX) * HAND_SMOOTH;
+          smoothHandY += (hy - smoothHandY) * HAND_SMOOTH;
+        }
+
+        if (prevHandX !== null) {
+          const dx = Math.max(-HAND_MAX_DELTA, Math.min(HAND_MAX_DELTA, smoothHandX - prevHandX));
+          const dy = Math.max(-HAND_MAX_DELTA, Math.min(HAND_MAX_DELTA, smoothHandY - prevHandY));
+
+          const dt = Math.max(rawDelta, 0.008);
+          const targetVelY = Math.max(-MAX_DRAG_VEL, Math.min(MAX_DRAG_VEL, dx * HAND_SENSITIVITY / dt));
+          const targetVelX = Math.max(-MAX_DRAG_VEL, Math.min(MAX_DRAG_VEL, dy * HAND_SENSITIVITY / dt));
+
+          handVelX += (targetVelX - handVelX) * 0.35;
+          handVelY += (targetVelY - handVelY) * 0.35;
+
+          if (Math.abs(dx) + Math.abs(dy) > 0.0005) {
+            // La sphère suit la pince en temps réel
+            dragVelX = handVelX;
+            dragVelY = handVelY;
+            isCoasting = true;
+          }
+        }
+        prevHandX = smoothHandX;
+        prevHandY = smoothHandY;
+      } else {
+        // Main ouverte : relâchement — l'inertie accumulée prend le relais (effet lancé)
+        prevHandX   = null; prevHandY   = null;
+        smoothHandX = null; smoothHandY = null;
+        handVelX    = 0;    handVelY    = 0;
       }
-      prevHandX   = null;
-      prevHandY   = null;
-      smoothHandX = null;
-      smoothHandY = null;
-      handVelX    = 0;
-      handVelY    = 0;
+    } else {
+      // Aucune main détectée
+      if (dot) dot.style.background = '#888';
+      prevHandX   = null; prevHandY   = null;
+      smoothHandX = null; smoothHandY = null;
+      handVelX    = 0;    handVelY    = 0;
     }
   }
 

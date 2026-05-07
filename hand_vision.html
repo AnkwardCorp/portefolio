@@ -124,6 +124,21 @@
 
       #btn-back:hover { opacity: 0.4; }
 
+      #cam-toggle {
+        position: fixed;
+        bottom: 16px;
+        left: 16px;
+        z-index: 21;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        opacity: 0.5;
+        transition: opacity 0.2s;
+      }
+      #cam-toggle:hover { opacity: 1; }
+      #cam-toggle.cam-off { opacity: 0.2; }
+
       #toc {
         position: absolute;
         top: 8%;
@@ -188,6 +203,7 @@
 
     <div id="theme-fade"></div>
     <button id="theme-toggle" aria-label="Toggle dark mode">&#9789;</button>
+    <button id="cam-toggle" aria-label="Toggle camera preview" title="Toggle camera">&#128247;</button>
     <script type="module" src="hand_vision.js"></script>
   </body>
 </html>
