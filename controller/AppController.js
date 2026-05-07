@@ -55,8 +55,26 @@ export class AppController {
 
     // Tooltip sprite
     this._spriteNotes = [];
+    const bubbleStyle = document.createElement('style');
+    bubbleStyle.textContent = `
+      .sprite-bubble {
+        position: fixed;
+        pointer-events: none;
+        z-index: 100;
+        background: linear-gradient(180deg, #adadad 0%, #f4f4f4 45%, #c8c8c8 100%);
+        color: #111;
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-size: 13px;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.18s ease;
+        font-family: Roboto, sans-serif;
+      }
+    `;
+    document.head.appendChild(bubbleStyle);
     this._tooltipEl = document.createElement('div');
-    this._tooltipEl.style.cssText = 'position:fixed;pointer-events:none;z-index:100;background:rgba(255,255,255,0.72);color:#000;padding:6px 11px;border-radius:8px;font-size:13px;white-space:nowrap;opacity:0;transition:opacity 0.18s ease;font-family:Roboto,sans-serif;';
+    this._tooltipEl.className = 'sprite-bubble';
     document.body.appendChild(this._tooltipEl);
     this._tooltipVisible = false;
     this._tooltipHideTimer = null;

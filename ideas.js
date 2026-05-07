@@ -49,6 +49,9 @@ const TOUCH_THRESHOLD      = 40;
 const SELECTED_SCALE_BOOST = 0.80;
 const HOVER_SCALE_BOOST    = 1.09;
 
+const INTRO_LINE_DURATION  = 0.07;
+const INTRO_SPRITE_FADE    = 0.08;
+
 // ── Utilitaire texture arrondie ───────────────────────────────────────────────
 
 function loadRoundedTexture(path, onReady) {
@@ -149,7 +152,10 @@ scene.add(group);
 
 // ── État ──────────────────────────────────────────────────────────────────────
 
-let entries     = [];   // { sprite, mat, localDir, localPos, loadAlpha, phaseX, phaseY, project }
+let entries           = [];
+let lineEntries       = [];
+let introLineDuration = INTRO_LINE_DURATION;
+let introLinesEndTime = Infinity;
 let sorted      = [];
 let fadeList    = [];
 let snapIndex   = 0;
@@ -330,6 +336,9 @@ function init(gltf, projects) {
   spriteSize = radius * 0.28;
   noiseAmp   = radius * 0.006;
 
+  // Durée par ligne : animation totale ~1s quelle que soit la densité
+  introLineDuration = Math.min(INTRO_LINE_DURATION, 1.0 / worldVerts.length);
+
   // Créer les sprites THREE.Sprite (toujours face caméra, compatible rotation groupe)
   worldVerts.forEach((v, i) => {
     const localPos = v.clone().sub(sphereCenter);
@@ -345,6 +354,8 @@ function init(gltf, projects) {
     const entry = {
       sprite, mat, localDir, localPos: localPos.clone(),
       loadAlpha: 0,
+      introAlpha: 0,
+      introUnlockTime: elapsed + i * introLineDuration,
       phaseX: Math.random() * Math.PI * 2,
       phaseY: Math.random() * Math.PI * 2,
       currentBoost: 1,
@@ -352,12 +363,27 @@ function init(gltf, projects) {
     };
     entries.push(entry);
 
-    const staggerDelay = elapsed + (i / worldVerts.length) * STAGGER_TOTAL;
     mat.map = loadRoundedTexture(project.image, () => {
       mat.needsUpdate = true;
-      fadeList.push({ entry, delay: Math.max(staggerDelay, elapsed) });
+      fadeList.push({ entry, delay: elapsed });
     });
   });
+
+  // Lignes de connexion entre vertices consécutifs (intro animée)
+  const N = entries.length;
+  for (let i = 0; i < N; i++) {
+    const matLine = new THREE.LineBasicMaterial({ color: 0x888888, transparent: true, opacity: 0, depthWrite: false });
+    const positions = new Float32Array(6);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const line = new THREE.Line(geo, matLine);
+    line.frustumCulled = false;
+    line.renderOrder = -1;
+    group.add(line);
+    lineEntries.push({ line, matLine, entryA: entries[i], entryB: entries[(i + 1) % N], introDraw: 0, introDelay: elapsed + i * introLineDuration });
+  }
+
+  introLinesEndTime = elapsed + N * introLineDuration + INTRO_SPRITE_FADE;
 
   // sorted = ordre naturel des vertices
   sorted = [...entries];
@@ -507,6 +533,18 @@ const clock = new THREE.Clock();
     return t < 1;
   });
 
+  // Animation d'intro — tracé progressif des lignes
+  for (const le of lineEntries) {
+    const tl = (elapsed - le.introDelay) / introLineDuration;
+    le.introDraw = Math.min(1, Math.max(0, tl));
+  }
+
+  // Animation d'intro — apparition des sprites
+  for (const entry of entries) {
+    const ti = Math.min(1, Math.max(0, (elapsed - entry.introUnlockTime) / INTRO_SPRITE_FADE));
+    entry.introAlpha = ti * ti * (3 - 2 * ti);
+  }
+
   const nt = elapsed * NOISE_FREQ;
 
   for (const entry of entries) {
@@ -527,7 +565,29 @@ const clock = new THREE.Clock();
     const worldDir = entry.localDir.clone().applyQuaternion(group.quaternion);
     const dot      = worldDir.dot(cameraDir);
     const visAlpha = isSelected ? 1 : Math.max(0, (dot + 0.15) / 1.15);
-    entry.mat.opacity = entry.loadAlpha * visAlpha;
+    entry.mat.opacity = Math.min(entry.loadAlpha, entry.introAlpha) * visAlpha;
+  }
+
+  // Fondu de sortie global des lignes
+  const LINE_FADE_OUT = 0.15;
+  const lineOut = Math.min(1, Math.max(0, (elapsed - introLinesEndTime) / LINE_FADE_OUT));
+  const lineGlobalAlpha = 1 - lineOut;
+
+  for (const le of lineEntries) {
+    const pA = le.entryA.sprite.position;
+    const pB = le.entryB.sprite.position;
+    const arr = le.line.geometry.attributes.position.array;
+    arr[0] = pA.x; arr[1] = pA.y; arr[2] = pA.z;
+    if (le.introDraw < 1) {
+      const drawEnd = new THREE.Vector3().lerpVectors(pA, pB, le.introDraw);
+      arr[3] = drawEnd.x; arr[4] = drawEnd.y; arr[5] = drawEnd.z;
+      le.matLine.opacity = le.introDraw * lineGlobalAlpha;
+    } else {
+      arr[3] = pB.x; arr[4] = pB.y; arr[5] = pB.z;
+      const normalOp = le.entryB.introAlpha < 1 ? le.entryA.mat.opacity : Math.min(le.entryA.mat.opacity, le.entryB.mat.opacity);
+      le.matLine.opacity = normalOp * lineGlobalAlpha;
+    }
+    le.line.geometry.attributes.position.needsUpdate = true;
   }
 
   // Hover scale — lerp
