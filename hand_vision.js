@@ -55,37 +55,38 @@ const INTRO_SPRITE_FADE    = 0.08;
 // ── Utilitaire texture arrondie ───────────────────────────────────────────────
 
 function loadRoundedTexture(path, onReady) {
-  const size = 256;
-  const r    = size * CORNER_RADIUS;
-  const cvs  = document.createElement('canvas');
-  cvs.width  = size;
-  cvs.height = size;
-  const ctx  = cvs.getContext('2d');
-  const tex  = new THREE.CanvasTexture(cvs);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  const img  = new Image();
+  const img = new Image();
   img.onload = () => {
+    const aspect = img.naturalWidth / img.naturalHeight;
+    const h   = 256;
+    const w   = Math.round(h * aspect);
+    const r   = h * CORNER_RADIUS;
+    const cvs = document.createElement('canvas');
+    cvs.width  = w;
+    cvs.height = h;
+    const ctx = cvs.getContext('2d');
     ctx.save();
-    ctx.clearRect(0, 0, size, size);
+    ctx.clearRect(0, 0, w, h);
     ctx.beginPath();
     ctx.moveTo(r, 0);
-    ctx.lineTo(size - r, 0);
-    ctx.arcTo(size, 0,    size, r,        r);
-    ctx.lineTo(size, size - r);
-    ctx.arcTo(size, size, size - r, size, r);
-    ctx.lineTo(r, size);
-    ctx.arcTo(0, size,    0, size - r,    r);
+    ctx.lineTo(w - r, 0);
+    ctx.arcTo(w, 0,   w, r,       r);
+    ctx.lineTo(w, h - r);
+    ctx.arcTo(w, h,   w - r, h,   r);
+    ctx.lineTo(r, h);
+    ctx.arcTo(0, h,   0, h - r,   r);
     ctx.lineTo(0, r);
-    ctx.arcTo(0, 0,       r, 0,           r);
+    ctx.arcTo(0, 0,   r, 0,       r);
     ctx.closePath();
     ctx.clip();
-    ctx.drawImage(img, 0, 0, size, size);
+    ctx.drawImage(img, 0, 0, w, h);
     ctx.restore();
-    tex.needsUpdate = true;
-    onReady?.();
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    onReady?.(tex, aspect);
   };
+  img.onerror = () => onReady?.(null, 1);
   img.src = path;
-  return tex;
 }
 
 // ── Renderer ──────────────────────────────────────────────────────────────────
@@ -329,13 +330,57 @@ function advanceSnap(steps) {
   updateUI();
 }
 
-window.addEventListener('wheel', (e) => {
-  wheelAccum += e.deltaY;
-  if (Math.abs(wheelAccum) < WHEEL_THRESHOLD) return;
-  advanceSnap(Math.sign(wheelAccum));
-  wheelAccum = 0;
-}, { passive: true });
 
+
+// ── Changement de dataset (gallery menu) ──────────────────────────────────────
+
+async function switchDataset(url) {
+  if (entries.length === 0) return;
+  const projects = await fetch(url).then(r => r.json()).catch(() => []);
+  if (!projects.length) return;
+
+  entries.forEach((entry, i) => {
+    const project = projects[i % projects.length];
+    entry.project = project;
+    entry.loadAlpha = 0;
+    if (entry.mat.map) { entry.mat.map.dispose(); entry.mat.map = null; }
+    loadRoundedTexture(project.image, (tex, aspect) => {
+      entry.aspect = aspect;
+      if (tex) { entry.mat.map = tex; entry.mat.needsUpdate = true; }
+    });
+    fadeList.push({ entry, delay: elapsed });
+  });
+
+  snapIndex = 0;
+  if (sorted.length > 0) {
+    targetGroupQuat.setFromUnitVectors(sorted[0].localDir, cameraDir);
+  }
+
+  const tocEl = document.getElementById('toc');
+  tocEl.innerHTML = '';
+  sorted.forEach((entry, i) => {
+    const item = document.createElement('div');
+    item.className = 'toc-item';
+    item.textContent = `${i + 1} — ${entry.project.name}`;
+    item.addEventListener('click', () => {
+      const n = sorted.length;
+      const fwd  = ((i - snapIndex) % n + n) % n;
+      const back = ((snapIndex - i) % n + n) % n;
+      advanceSnap(fwd <= back ? fwd : -back);
+    });
+    tocEl.appendChild(item);
+  });
+
+  updateUI();
+}
+
+document.querySelectorAll('.gallery-item').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.gallery-item').forEach(g => g.classList.remove('active'));
+    el.classList.add('active');
+    switchDataset(el.dataset.src);
+  });
+});
 
 let lastTouchY = 0, touchAccum = 0;
 window.addEventListener('touchstart', (e) => {
@@ -434,7 +479,7 @@ function init(gltf, projects) {
 
   // Rayon moyen → taille sprites
   const radius = worldVerts.reduce((s, v) => s + v.distanceTo(sphereCenter), 0) / worldVerts.length;
-  spriteSize = radius * 0.28;
+  spriteSize = radius * 0.30;
   noiseAmp   = radius * 0.006;
 
   // Durée par ligne : animation totale ~1s quelle que soit la densité
@@ -460,12 +505,14 @@ function init(gltf, projects) {
       phaseX: Math.random() * Math.PI * 2,
       phaseY: Math.random() * Math.PI * 2,
       currentBoost: 1,
+      aspect: 1,
       project,
     };
     entries.push(entry);
 
-    mat.map = loadRoundedTexture(project.image, () => {
-      mat.needsUpdate = true;
+    loadRoundedTexture(project.image, (tex, aspect) => {
+      entry.aspect = aspect;
+      if (tex) { mat.map = tex; mat.needsUpdate = true; }
       fadeList.push({ entry, delay: elapsed });
     });
   });
@@ -654,7 +701,7 @@ const clock = new THREE.Clock();
     // Scale : lerp vers la cible pour un agrandissement smooth
     const targetBoost = isSelected ? (1 + SELECTED_SCALE_BOOST) * (isHoveringSelected ? hoverScale : 1) : 1;
     entry.currentBoost += (targetBoost - entry.currentBoost) * Math.min(1, rawDelta * 6);
-    entry.sprite.scale.setScalar(spriteSize * entry.currentBoost);
+    entry.sprite.scale.set(spriteSize * entry.aspect * entry.currentBoost, spriteSize * entry.currentBoost, 1);
 
     // Bruit de position (dans l'espace local du groupe)
     entry.sprite.position.x = entry.localPos.x + Math.sin(nt + entry.phaseX) * noiseAmp;
