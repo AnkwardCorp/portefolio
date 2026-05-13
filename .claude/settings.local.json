@@ -4,7 +4,8 @@
       "Bash(sed \"s/$/''''/\")",
       "Bash(python3 -c \":*)",
       "Bash(grep -E '\\\\.\\(jpg|jpeg|png|webp\\)$')",
-      "Bash(grep -v \"profile_pics$\")"
+      "Bash(grep -v \"profile_pics$\")",
+      "Bash(git checkout *)"
     ]
   }
 }

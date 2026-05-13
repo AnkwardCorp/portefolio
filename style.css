@@ -73,22 +73,25 @@ body.dark {
 }
 
 #lets-go-btn {
-  margin-top: 0;
+  margin-top: 8px;
   background: none;
   border: none;
   cursor: pointer;
-  font-family: 'Roboto', sans-serif;
-  font-size: 13px;
-  font-weight: 400;
+  font-size: 22px;
   color: var(--text-primary);
-  text-decoration: underline;
-  text-underline-offset: 3px;
   padding: 0;
-  transition: opacity 0.4s, color 0.4s;
+  line-height: 1;
+  transition: opacity 0.4s, transform 0.2s;
   pointer-events: auto;
+  animation: arrowBob 1.4s ease-in-out infinite;
 }
 
 #lets-go-btn:hover { opacity: 0.5; }
+
+@keyframes arrowBob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(5px); }
+}
 
 #gyro-permission-btn {
   position: fixed;
@@ -110,8 +113,10 @@ body.dark {
 #gyro-permission-btn:active { opacity: 1; }
 
 #scroll-text {
-  height: 0;
-  overflow: visible;
+  position: absolute;
+  top: calc(50% - 30px);
+  left: 50%;
+  transform: translateX(-50%);
   opacity: 0;
   width: min(300px, 85vw);
   pointer-events: none;

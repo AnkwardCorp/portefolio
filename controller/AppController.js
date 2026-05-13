@@ -24,11 +24,11 @@ const PARAMS = {
   parallaxAmp:       0.1,
   parallaxLerp:      0.04,
   // UI
-  textFadeDuration:       0.5,
+  textFadeDuration:       1.2,
   autoAdvanceSpeed:       2.5,   // desktop only
   mobileAdvanceDuration:  0.8,   // secondes pour atteindre la fin sur mobile
   letsGoThreshold:        0.70,
-  textThreshold:          0.80,
+  textThreshold:          0.75,
 };
 
 export class AppController {
@@ -100,10 +100,9 @@ export class AppController {
     this.uiView = new UIView(uiOverlay);
     this.scrollTextEl = document.getElementById('scroll-text');
     this.bottomLinksEl = document.getElementById('bottom-links');
+    this._centerAnchorEl = document.getElementById('center-anchor');
     this.scrollTextVisible = false;
-    this._scrollTextNaturalH = 0;
     this._textFadeT = 0;
-    this.headerSubtitleEl = document.getElementById('header-subtitle');
     this.headerTextChanged = false;
     this._autoAdvance = false;
     this._cameraMaxReached = false;
@@ -320,33 +319,10 @@ export class AppController {
       this.bottomLinksEl.classList.remove('visible');
       this.scrollTextVisible = false;
     }
-    if (!this._scrollTextNaturalH && opacity > 0) {
-      this.scrollTextEl.style.height = 'auto';
-      this._scrollTextNaturalH = this.scrollTextEl.offsetHeight;
-      this.scrollTextEl.style.height = '0';
-    }
-    this.scrollTextEl.style.height    = `${opacity * this._scrollTextNaturalH}px`;
-    this.scrollTextEl.style.marginTop = `${opacity * 20}px`;
-    this.scrollTextEl.style.opacity   = opacity;
-    this.bottomLinksEl.style.opacity  = opacity;
-
-    if (!this.headerTextChanged && this._textFadeT > 0) {
-      this.headerTextChanged = true;
-      this.headerSubtitleEl.style.transition = 'opacity 0.4s ease';
-      this.headerSubtitleEl.style.opacity = '0';
-      setTimeout(() => {
-        this.headerSubtitleEl.textContent = 'Work with creatives';
-        this.headerSubtitleEl.style.opacity = '1';
-      }, 400);
-    } else if (this.headerTextChanged && this._textFadeT === 0) {
-      this.headerTextChanged = false;
-      this.headerSubtitleEl.style.transition = 'opacity 0.4s ease';
-      this.headerSubtitleEl.style.opacity = '0';
-      setTimeout(() => {
-        this.headerSubtitleEl.textContent = 'Followed by creatives';
-        this.headerSubtitleEl.style.opacity = '1';
-      }, 400);
-    }
+    this._centerAnchorEl.style.transform = `translateY(${-opacity * 120}px)`;
+    this.scrollTextEl.style.opacity = opacity;
+    this.scrollTextEl.style.transform = `translateX(-50%) translateY(${(1 - opacity) * 12}px)`;
+    this.bottomLinksEl.style.opacity = opacity;
 
     // Tooltip sprite — positionné sur le sprite en espace écran
     const hovered = this.glbView.hoveredSprite;
@@ -388,22 +364,11 @@ export class AppController {
     this._letsGoHidden = true;
     this._letsGoBtn.style.pointerEvents = 'none';
     this._letsGoBtn.style.opacity = '0';
-    clearTimeout(this._letsGoTimer);
-    this._letsGoTimer = setTimeout(() => {
-      if (!this._letsGoHidden) return;
-      this._letsGoBtn.style.height = '0';
-      this._letsGoBtn.style.marginTop = '0';
-      this._letsGoBtn.style.overflow = 'hidden';
-    }, 400);
   }
 
   _showLetsGo() {
     if (!this._letsGoHidden) return;
     this._letsGoHidden = false;
-    clearTimeout(this._letsGoTimer);
-    this._letsGoBtn.style.height = '';
-    this._letsGoBtn.style.marginTop = '';
-    this._letsGoBtn.style.overflow = '';
     this._letsGoBtn.style.opacity = '1';
     this._letsGoBtn.style.pointerEvents = 'auto';
   }

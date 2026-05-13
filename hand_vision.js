@@ -174,6 +174,9 @@ let handVelY        = 0;
 let handDetected    = false;
 let lastHandDetectTime = 0;
 const HAND_DETECT_INTERVAL = 1000 / 20; // 20 fps
+let previewDragging   = false;
+let _previewMouseMove = null;
+let _previewMouseUp   = null;
 
 
 // Détection de la pince : pouce (4) et index (8) proches l'un de l'autre, normalisé par la taille de la main
@@ -190,9 +193,9 @@ function isPinch(landmarks) {
 async function initHandTracking() {
   // Prévisualisation webcam (coin bas-droit, miroir, noir et blanc)
   handPreviewEl = document.createElement('div');
-  handPreviewEl.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:20;border-radius:10px;overflow:hidden;width:200px;opacity:0.85;box-shadow:0 2px 16px rgba(0,0,0,0.5);';
+  handPreviewEl.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:20;border-radius:10px;overflow:hidden;width:200px;opacity:0.85;box-shadow:0 2px 16px rgba(0,0,0,0.5);background:#111;';
   handVideoEl = document.createElement('video');
-  handVideoEl.style.cssText = 'width:200px;display:block;transform:scaleX(-1);filter:grayscale(1);';
+  handVideoEl.style.cssText = 'width:200px;display:block;transform:scaleX(-1);filter:grayscale(1);visibility:hidden;';
   handVideoEl.autoplay = true;
   handVideoEl.playsInline = true;
   handPreviewEl.appendChild(handVideoEl);
@@ -217,17 +220,59 @@ async function initHandTracking() {
   dot.id = 'hand-dot';
   dot.style.cssText = 'position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#888;transition:background 0.2s;';
   handPreviewEl.appendChild(dot);
+
+  // Bouton bascule vidéo/squelette (vidéo visible par défaut)
+  let videoVisible = true;
+  handVideoEl.style.visibility  = 'visible';
+  handPreviewEl.style.background = 'transparent';
+  const vidToggleBtn = document.createElement('button');
+  vidToggleBtn.style.cssText = 'position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#fff;font-size:10px;padding:2px 6px;cursor:pointer;z-index:2;line-height:1.4;';
+  vidToggleBtn.textContent = '◎ squelette';
+  vidToggleBtn.title = 'Afficher/masquer la vidéo';
+  vidToggleBtn.addEventListener('click', () => {
+    videoVisible = !videoVisible;
+    handVideoEl.style.visibility  = videoVisible ? 'visible' : 'hidden';
+    handPreviewEl.style.background = videoVisible ? 'transparent' : '#111';
+    vidToggleBtn.textContent = videoVisible ? '◎ squelette' : '◉ vidéo';
+  });
+  handPreviewEl.appendChild(vidToggleBtn);
+
   document.body.appendChild(handPreviewEl);
 
-  // Bouton toggle caméra
-  const camToggleBtn = document.getElementById('cam-toggle');
-  if (camToggleBtn) {
-    camToggleBtn.addEventListener('click', () => {
-      const hidden = handPreviewEl.style.display === 'none';
-      handPreviewEl.style.display = hidden ? '' : 'none';
-      camToggleBtn.classList.toggle('cam-off', !hidden);
-    });
-  }
+  // Drag-and-drop sur la fenêtre prévisualisation
+  let previewDragOffX = 0, previewDragOffY = 0;
+  handPreviewEl.style.cursor = 'grab';
+
+  handPreviewEl.addEventListener('mousedown', (e) => {
+    if (e.target === vidToggleBtn) return;
+    previewDragging = true;
+    const rect = handPreviewEl.getBoundingClientRect();
+    previewDragOffX = e.clientX - rect.left;
+    previewDragOffY = e.clientY - rect.top;
+    handPreviewEl.style.bottom = '';
+    handPreviewEl.style.right  = '';
+    handPreviewEl.style.top    = rect.top  + 'px';
+    handPreviewEl.style.left   = rect.left + 'px';
+    handPreviewEl.style.cursor = 'grabbing';
+    e.stopPropagation();
+  });
+
+  _previewMouseMove = (e) => {
+    if (!previewDragging) return;
+    const x = Math.max(0, Math.min(window.innerWidth  - 200, e.clientX - previewDragOffX));
+    const y = Math.max(0, Math.min(window.innerHeight -  60, e.clientY - previewDragOffY));
+    handPreviewEl.style.left = x + 'px';
+    handPreviewEl.style.top  = y + 'px';
+  };
+
+  _previewMouseUp = () => {
+    if (!previewDragging) return;
+    previewDragging = false;
+    handPreviewEl.style.cursor = 'grab';
+  };
+
+  window.addEventListener('mousemove', _previewMouseMove);
+  window.addEventListener('mouseup',   _previewMouseUp);
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 24, max: 24 } } });
@@ -253,8 +298,51 @@ async function initHandTracking() {
   });
 }
 
-initHandTracking().catch(err => console.warn('[hand_vision] Hand tracking init failed:', err));
-let fadeList    = [];
+let handTrackingActive = false;
+
+function stopHandTracking() {
+  if (handVideoEl?.srcObject) {
+    handVideoEl.srcObject.getTracks().forEach(t => t.stop());
+    handVideoEl.srcObject = null;
+  }
+  handLandmarker = null;
+  handPreviewEl?.remove();
+  handPreviewEl = null;
+  handVideoEl   = null;
+  handCanvasEl  = null;
+  handSkelCtx   = null;
+  prevHandX = prevHandY = smoothHandX = smoothHandY = null;
+  handVelX = handVelY = 0;
+  handDetected = false;
+  if (_previewMouseMove) { window.removeEventListener('mousemove', _previewMouseMove); _previewMouseMove = null; }
+  if (_previewMouseUp)   { window.removeEventListener('mouseup',   _previewMouseUp);   _previewMouseUp   = null; }
+  previewDragging = false;
+}
+
+const camToggleBtn = document.getElementById('cam-toggle');
+camToggleBtn.addEventListener('click', async () => {
+  if (!handTrackingActive) {
+    handTrackingActive = true;
+    camToggleBtn.textContent = 'Hand Tracking: on';
+    camToggleBtn.classList.add('cam-on');
+    try {
+      await initHandTracking();
+    } catch (err) {
+      console.warn('[hand_vision] Hand tracking init failed:', err);
+      handTrackingActive = false;
+      camToggleBtn.textContent = 'Hand Tracking: off';
+      camToggleBtn.classList.remove('cam-on');
+    }
+  } else {
+    stopHandTracking();
+    handTrackingActive = false;
+    camToggleBtn.textContent = 'Hand Tracking: off';
+    camToggleBtn.classList.remove('cam-on');
+  }
+});
+let fadeList          = [];
+let switchFadeOutList = [];
+let switchFadeOutCallback = null;
 let snapIndex   = 0;
 let spriteSize  = 1;
 let noiseAmp    = 0.01;
@@ -374,11 +462,23 @@ async function switchDataset(url) {
   updateUI();
 }
 
+function fadeOutThenSwitch(url) {
+  const FADE_OUT = 0.35;
+  fadeList = fadeList.filter(f => !entries.includes(f.entry));
+  switchFadeOutList = entries.map(entry => ({
+    entry,
+    startAlpha: entry.loadAlpha,
+    startTime: elapsed,
+    duration: FADE_OUT,
+  }));
+  switchFadeOutCallback = () => switchDataset(url);
+}
+
 document.querySelectorAll('.gallery-item').forEach(el => {
   el.addEventListener('click', () => {
     document.querySelectorAll('.gallery-item').forEach(g => g.classList.remove('active'));
     el.classList.add('active');
-    switchDataset(el.dataset.src);
+    fadeOutThenSwitch(el.dataset.src);
   });
 });
 
@@ -671,6 +771,21 @@ const clock = new THREE.Clock();
   if (entries.length > 0) {
     const speed = isCoasting ? SLERP_SPEED * 1.2 : SLERP_SPEED;
     group.quaternion.slerp(targetGroupQuat, 1 - Math.exp(-speed * rawDelta));
+  }
+
+  // Fade-out avant changement de dataset
+  if (switchFadeOutList.length > 0) {
+    let allDone = true;
+    for (const { entry, startAlpha, startTime, duration } of switchFadeOutList) {
+      const t = Math.min((elapsed - startTime) / duration, 1);
+      entry.loadAlpha = startAlpha * (1 - t * t * (3 - 2 * t));
+      if (t < 1) allDone = false;
+    }
+    if (allDone) {
+      switchFadeOutList = [];
+      switchFadeOutCallback?.();
+      switchFadeOutCallback = null;
+    }
   }
 
   // Fade-in au chargement

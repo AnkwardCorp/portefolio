@@ -53,7 +53,7 @@ function loadRoundedTexture(path) {
 }
 
 const FADE_DURATION  = 0.2;
-const STAGGER_TOTAL  = 3.0;
+const STAGGER_TOTAL  = 1.5;
 const NOISE_AMP      = 0.012;
 const NOISE_FREQ     = 0.5; //noise sur le z index des sprites
 const FOG_NEAR       = 2.0;  // distance où l'opacité commence à baisser
