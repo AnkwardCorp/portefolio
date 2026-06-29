@@ -61,7 +61,11 @@ export class AppController {
         position: fixed;
         pointer-events: none;
         z-index: 100;
-        background: linear-gradient(180deg, #adadad 0%, #f4f4f4 45%, #c8c8c8 100%);
+        background: rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(14px) saturate(180%);
+        -webkit-backdrop-filter: blur(14px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.55);
         color: #111;
         padding: 8px 20px;
         border-radius: 50px;
@@ -70,6 +74,12 @@ export class AppController {
         opacity: 0;
         transition: opacity 0.18s ease;
         font-family: Roboto, sans-serif;
+      }
+      body.dark .sprite-bubble {
+        background: rgba(30, 30, 40, 0.40);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.40), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+        color: #eee;
       }
     `;
     document.head.appendChild(bubbleStyle);

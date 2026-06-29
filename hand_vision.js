@@ -177,6 +177,9 @@ const HAND_DETECT_INTERVAL = 1000 / 20; // 20 fps
 let previewDragging   = false;
 let _previewMouseMove = null;
 let _previewMouseUp   = null;
+let previewResizing   = false;
+let _resizeMouseMove  = null;
+let _resizeMouseUp    = null;
 
 
 // Détection de la pince : pouce (4) et index (8) proches l'un de l'autre, normalisé par la taille de la main
@@ -274,6 +277,51 @@ async function initHandTracking() {
   window.addEventListener('mousemove', _previewMouseMove);
   window.addEventListener('mouseup',   _previewMouseUp);
 
+  // Redimensionnement de la fenêtre prévisualisation
+  const MIN_PREVIEW_W = 120, MAX_PREVIEW_W = 480;
+  let resizeStartX = 0, resizeStartW = 200;
+
+  function applyPreviewWidth(w) {
+    w = Math.max(MIN_PREVIEW_W, Math.min(MAX_PREVIEW_W, w));
+    const ratio = handVideoEl.videoWidth > 0 ? handVideoEl.videoHeight / handVideoEl.videoWidth : 0.75;
+    const h = Math.round(w * ratio);
+    handPreviewEl.style.width = w + 'px';
+    handVideoEl.style.width   = w + 'px';
+    handCanvasEl.width        = w;
+    handCanvasEl.height       = h;
+    handCanvasEl.style.width  = w + 'px';
+    handCanvasEl.style.height = h + 'px';
+  }
+
+  const resizeHandle = document.createElement('div');
+  resizeHandle.style.cssText = 'position:absolute;bottom:0;right:0;width:20px;height:20px;cursor:nwse-resize;z-index:3;display:flex;align-items:flex-end;justify-content:flex-end;padding:4px;box-sizing:border-box;';
+  resizeHandle.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 9L9 2M5 9L9 5" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+  handPreviewEl.appendChild(resizeHandle);
+
+  resizeHandle.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+    previewResizing = true;
+    resizeStartX = e.clientX;
+    resizeStartW = handPreviewEl.getBoundingClientRect().width;
+    handPreviewEl.style.cursor = 'nwse-resize';
+    document.body.style.userSelect = 'none';
+  });
+
+  _resizeMouseMove = (e) => {
+    if (!previewResizing) return;
+    applyPreviewWidth(resizeStartW + (e.clientX - resizeStartX));
+  };
+
+  _resizeMouseUp = () => {
+    if (!previewResizing) return;
+    previewResizing = false;
+    handPreviewEl.style.cursor = 'grab';
+    document.body.style.userSelect = '';
+  };
+
+  window.addEventListener('mousemove', _resizeMouseMove);
+  window.addEventListener('mouseup',   _resizeMouseUp);
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 24, max: 24 } } });
     handVideoEl.srcObject = stream;
@@ -316,27 +364,31 @@ function stopHandTracking() {
   handDetected = false;
   if (_previewMouseMove) { window.removeEventListener('mousemove', _previewMouseMove); _previewMouseMove = null; }
   if (_previewMouseUp)   { window.removeEventListener('mouseup',   _previewMouseUp);   _previewMouseUp   = null; }
+  if (_resizeMouseMove)  { window.removeEventListener('mousemove', _resizeMouseMove);  _resizeMouseMove  = null; }
+  if (_resizeMouseUp)    { window.removeEventListener('mouseup',   _resizeMouseUp);    _resizeMouseUp    = null; }
   previewDragging = false;
+  previewResizing = false;
+  document.body.style.userSelect = '';
 }
 
 const camToggleBtn = document.getElementById('cam-toggle');
 camToggleBtn.addEventListener('click', async () => {
   if (!handTrackingActive) {
     handTrackingActive = true;
-    camToggleBtn.textContent = 'Hand Tracking: on';
+    camToggleBtn.textContent = '⦿ hand tracking';
     camToggleBtn.classList.add('cam-on');
     try {
       await initHandTracking();
     } catch (err) {
       console.warn('[hand_vision] Hand tracking init failed:', err);
       handTrackingActive = false;
-      camToggleBtn.textContent = 'Hand Tracking: off';
+      camToggleBtn.textContent = '○ hand tracking';
       camToggleBtn.classList.remove('cam-on');
     }
   } else {
     stopHandTracking();
     handTrackingActive = false;
-    camToggleBtn.textContent = 'Hand Tracking: off';
+    camToggleBtn.textContent = '○ hand tracking';
     camToggleBtn.classList.remove('cam-on');
   }
 });

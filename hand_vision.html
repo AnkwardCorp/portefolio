@@ -126,23 +126,29 @@
 
       #cam-toggle {
         position: fixed;
-        bottom: 16px;
-        left: 16px;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
         z-index: 21;
-        background: none;
-        border: none;
+        background: transparent;
+        border: 1.5px solid var(--text-primary);
+        border-radius: 20px;
+        padding: 8px 22px;
         cursor: pointer;
         font-family: 'Roboto', sans-serif;
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 300;
-        letter-spacing: 0.05em;
-        color: #ff2222;
-        opacity: 0.9;
-        transition: opacity 0.2s, color 0.3s;
-        padding: 0;
+        letter-spacing: 0.08em;
+        color: var(--text-primary);
+        transition: background 0.3s, color 0.3s, border-color 0.3s, opacity 0.2s;
       }
-      #cam-toggle:hover { opacity: 1; }
-      #cam-toggle.cam-on { color: #00e676; opacity: 0.9; }
+      #cam-toggle:hover { opacity: 0.6; }
+      #cam-toggle.cam-on {
+        background: var(--text-primary);
+        color: var(--bg-primary, #fff);
+        opacity: 1;
+      }
+      body.dark #cam-toggle.cam-on { color: #1e1e1e; }
 
       #toc {
         position: absolute;
@@ -240,7 +246,7 @@
 
     <div id="theme-fade"></div>
     <button id="theme-toggle" aria-label="Toggle dark mode">&#9789;</button>
-    <button id="cam-toggle" aria-label="Toggle hand tracking">Hand Tracking: off</button>
+    <button id="cam-toggle" aria-label="Toggle hand tracking">&#9737; hand tracking</button>
     <script type="module" src="hand_vision.js"></script>
   </body>
 </html>

@@ -40,7 +40,6 @@
             <span id="arrow-left" class="browse-arrow">→</span>
             <div id="links-column">
               <a id="browse-btn" href="browse.html">Browse projects</a>
-              <a id="ideas-btn" href="blog.html">Browse ideas</a>
               <a id="hand-btn" href="hand_vision.html">Hand vision</a>
             </div>
             <span id="arrow-right" class="browse-arrow">←</span>
@@ -57,7 +56,6 @@
       const arrowLeft  = document.getElementById('arrow-left');
       const arrowRight = document.getElementById('arrow-right');
       const browseBtn  = document.getElementById('browse-btn');
-      const ideasBtn   = document.getElementById('ideas-btn');
       const handBtn    = document.getElementById('hand-btn');
 
       function moveArrows(ty) {
@@ -66,9 +64,6 @@
       }
 
       browseBtn.addEventListener('mouseenter', () => moveArrows(0));
-      ideasBtn.addEventListener('mouseenter', () => {
-        moveArrows(ideasBtn.getBoundingClientRect().top - browseBtn.getBoundingClientRect().top);
-      });
       handBtn.addEventListener('mouseenter', () => {
         moveArrows(handBtn.getBoundingClientRect().top - browseBtn.getBoundingClientRect().top);
       });
