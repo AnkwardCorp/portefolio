@@ -59,21 +59,27 @@ body.dark {
   align-items: center;
 }
 
-#profile-pic {
+#profile-pic-wrapper {
   width: 80px;
   height: 80px;
-  border-radius: 50%;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#profile-pic {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  margin-bottom: 16px;
 }
 
-#header-text {
-  line-height: 1.5;
-  transition: opacity 0.5s ease;
-}
-
+/* Sorti du flux pour que #center-anchor n'englobe que l'image — sinon le
+   bouton décale la photo vers le haut du centre de l'écran. */
 #lets-go-btn {
-  margin-top: 8px;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 16px;
   background: none;
   border: none;
   cursor: pointer;
@@ -89,8 +95,8 @@ body.dark {
 #lets-go-btn:hover { opacity: 0.5; }
 
 @keyframes arrowBob {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(5px); }
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%       { transform: translateX(-50%) translateY(5px); }
 }
 
 #gyro-permission-btn {
@@ -112,26 +118,66 @@ body.dark {
 }
 #gyro-permission-btn:active { opacity: 1; }
 
-#scroll-text {
-  position: absolute;
-  top: calc(50% - 30px);
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0;
+/* ── Page texte (about.html) ─────────────────────────────────────────────── */
+
+body.about-page {
+  overflow-y: auto;
+}
+
+#about {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 72px 20px 48px;
+  font-family: 'Roboto', sans-serif;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+#about-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+
+#about-text {
   width: min(300px, 85vw);
-  pointer-events: none;
   font-size: 14px;
   font-weight: 400;
   color: var(--text-secondary);
   text-align: justify;
 }
 
-#scroll-text.visible {
-  pointer-events: auto;
+#about-text p {
+  line-height: 1.6;
 }
 
-#scroll-text p {
-  line-height: 1.6;
+/* Frappe : .desc-ghost réserve la hauteur du texte complet, .desc-typed se
+   superpose. Voir about.html — évite que le bloc centré saute à chaque ligne. */
+#about-desc {
+  position: relative;
+}
+
+#about-desc .desc-ghost {
+  visibility: hidden;
+}
+
+#about-desc .desc-typed {
+  position: absolute;
+  inset: 0;
+}
+
+/* Sur la page texte, les liens du bas sont dans le flux et toujours visibles. */
+.about-page #bottom-links {
+  position: static;
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+  margin-top: 40px;
 }
 
 #links-section {
@@ -160,7 +206,7 @@ body.dark {
   line-height: 1.4;
 }
 
-#browse-btn, #blog-btn {
+#browse-btn, #blog-btn, #hand-btn {
   color: var(--text-primary);
   text-decoration: underline;
   font-family: 'Roboto', sans-serif;
@@ -279,4 +325,30 @@ body.dark {
   pointer-events: none;
   z-index: -1;
   transition: opacity 0.25s ease;
+}
+
+/* Fondu de transition entre index.html et about.html — au-dessus de tout.
+   Durée alignée sur PARAMS.navigateFadeDuration (AppController.js). */
+#page-fade {
+  position: fixed;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 200;
+  background: #ffffff;
+  transition: opacity 0.45s ease;
+}
+
+body.dark #page-fade {
+  background: #000000;
+}
+
+#page-fade.cover {
+  opacity: 1;
+}
+
+/* Pas de canvas sur about.html : le voile de thème doit passer au-dessus. */
+.about-page #theme-fade {
+  position: fixed;
+  z-index: 200;
 }

@@ -24,12 +24,14 @@ const PARAMS = {
   parallaxAmp:       0.1,
   parallaxLerp:      0.04,
   // UI
-  textFadeDuration:       1.2,
   autoAdvanceSpeed:       2.5,   // desktop only
   mobileAdvanceDuration:  0.8,   // secondes pour atteindre la fin sur mobile
   letsGoThreshold:        0.70,
-  textThreshold:          0.75,
+  navigateThreshold:      0.92,  // fraction de maxCameraAdvance déclenchant le passage sur about.html
+  navigateFadeDuration:   0.45,  // secondes de fondu avant la navigation
 };
+
+const NEXT_PAGE = 'about.html';
 
 export class AppController {
   constructor(canvas, uiOverlay) {
@@ -108,11 +110,8 @@ export class AppController {
       this.cameraScrollEnabled = true;
     });
     this.uiView = new UIView(uiOverlay);
-    this.scrollTextEl = document.getElementById('scroll-text');
-    this.bottomLinksEl = document.getElementById('bottom-links');
-    this._centerAnchorEl = document.getElementById('center-anchor');
-    this.scrollTextVisible = false;
-    this._textFadeT = 0;
+    this._pageFadeEl = document.getElementById('page-fade');
+    this._navigating = false;
     this.headerTextChanged = false;
     this._autoAdvance = false;
     this._cameraMaxReached = false;
@@ -222,6 +221,18 @@ export class AppController {
       }
     }
 
+    // Retour navigateur depuis about.html : le bfcache restaure la page avec le
+    // fondu encore appliqué — on le lève et on rembobine le scroll.
+    window.addEventListener('pageshow', (e) => {
+      if (!e.persisted) return;
+      this._navigating = false;
+      this._pageFadeEl.classList.remove('cover');
+      this._autoAdvance = false;
+      this._cameraMaxReached = false;
+      this._scrollVel = 0;
+      this.targetCameraAdvance = 0;
+    });
+
     window.addEventListener('resize', () => this.sceneView.onResize());
   }
 
@@ -313,26 +324,8 @@ export class AppController {
     this.sceneView.camera.position.x = this.cameraMouseX;
     this.sceneView.camera.position.y = this.cameraMouseY;
 
-    // Fade texte
-    if (this.cameraAdvance >= PARAMS.maxCameraAdvance * PARAMS.textThreshold) {
-      this._textFadeT = Math.min(1, this._textFadeT + rawDelta / PARAMS.textFadeDuration);
-    } else {
-      this._textFadeT = Math.max(0, this._textFadeT - rawDelta / PARAMS.textFadeDuration);
-    }
-    const opacity = this._textFadeT * this._textFadeT * (3 - 2 * this._textFadeT);
-    if (opacity > 0.01 && !this.scrollTextVisible) {
-      this.scrollTextEl.classList.add('visible');
-      this.bottomLinksEl.classList.add('visible');
-      this.scrollTextVisible = true;
-    } else if (opacity <= 0.01 && this.scrollTextVisible) {
-      this.scrollTextEl.classList.remove('visible');
-      this.bottomLinksEl.classList.remove('visible');
-      this.scrollTextVisible = false;
-    }
-    this._centerAnchorEl.style.transform = `translateY(${-opacity * 120}px)`;
-    this.scrollTextEl.style.opacity = opacity;
-    this.scrollTextEl.style.transform = `translateX(-50%) translateY(${(1 - opacity) * 12}px)`;
-    this.bottomLinksEl.style.opacity = opacity;
+    // Fin du scroll → fondu puis passage sur la page texte
+    if (this.cameraAdvance >= PARAMS.maxCameraAdvance * PARAMS.navigateThreshold) this._goToNextPage();
 
     // Tooltip sprite — positionné sur le sprite en espace écran
     const hovered = this.glbView.hoveredSprite;
@@ -367,6 +360,15 @@ export class AppController {
     this._prevHoveredSprite = hovered;
 
     this.sceneView.render();
+  }
+
+  _goToNextPage() {
+    if (this._navigating) return;
+    this._navigating = true;
+    this._hideLetsGo();
+    // La couleur du voile suit body.dark (CSS) — enchaîne sans coupure avec about.html
+    this._pageFadeEl.classList.add('cover');
+    setTimeout(() => { window.location.href = NEXT_PAGE; }, PARAMS.navigateFadeDuration * 1000);
   }
 
   _hideLetsGo() {

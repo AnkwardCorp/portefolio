@@ -6,6 +6,7 @@
     <title>AnkwardCorp: Amin Ankward</title>
 <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&display=swap" />
+    <link rel="prefetch" href="about.html" />
     <script type="importmap">
     {
       "imports": {
@@ -20,54 +21,17 @@
       <canvas id="canvas"></canvas>
       <div id="theme-fade"></div>
       <div id="ui-overlay"></div>
-      <div id="bottom-links">
-        <a href="https://x.com/amin_ankward" target="_blank" rel="noopener">X/Twitter</a>
-        <span id="email-wrapper">
-          <span id="email-label">Email</span>
-          <span id="email-address">amin.ankward@gmail.com</span>
-        </span>
-        <a href="https://instagram.com/amin_ankward" target="_blank" rel="noopener">Instagram</a>
-      </div>
       <div id="center-text">
         <div id="center-anchor">
-          <img id="profile-pic" src="./assets/textures/Amin_ankward_Profile_View.jpg" alt="profile" />
-          <div id="header-text">@amin_ankward</div>
-          <button id="lets-go-btn">↓</button>
-        </div>
-        <div id="scroll-text">
-          <p>I am Amin, a designer who creates and develops concepts and ideas. I’ve been doing this for years with clients around the world. I enjoy exploring, experimenting, failing, and starting again—until it leads to something meaningful. Here are some of my personal and professional creations. I’m always open to collaborating on new projects.</p>
-          <div id="links-section">
-            <span id="arrow-left" class="browse-arrow">→</span>
-            <div id="links-column">
-              <a id="browse-btn" href="browse.html">Browse projects</a>
-              <a id="hand-btn" href="hand_vision.html">Hand vision</a>
-            </div>
-            <span id="arrow-right" class="browse-arrow">←</span>
+          <div id="profile-pic-wrapper">
+            <img id="profile-pic" src="./assets/textures/Amin_ankward_Profile_View.png" alt="profile" />
           </div>
+          <button id="lets-go-btn">↓</button>
         </div>
       </div>
     </div>
+    <div id="page-fade"></div>
     <button id="theme-toggle" aria-label="Toggle dark mode">☽</button>
-    <script>
-      document.getElementById('email-wrapper').addEventListener('click', function () {
-        this.classList.toggle('revealed');
-      });
-
-      const arrowLeft  = document.getElementById('arrow-left');
-      const arrowRight = document.getElementById('arrow-right');
-      const browseBtn  = document.getElementById('browse-btn');
-      const handBtn    = document.getElementById('hand-btn');
-
-      function moveArrows(ty) {
-        arrowLeft.style.transform  = `translateY(${ty}px)`;
-        arrowRight.style.transform = `translateY(${ty}px)`;
-      }
-
-      browseBtn.addEventListener('mouseenter', () => moveArrows(0));
-      handBtn.addEventListener('mouseenter', () => {
-        moveArrows(handBtn.getBoundingClientRect().top - browseBtn.getBoundingClientRect().top);
-      });
-</script>
     <script type="module" src="main.js"></script>
   </body>
 </html>
