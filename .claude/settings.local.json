@@ -5,7 +5,18 @@
       "Bash(python3 -c \":*)",
       "Bash(grep -E '\\\\.\\(jpg|jpeg|png|webp\\)$')",
       "Bash(grep -v \"profile_pics$\")",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git fetch *)",
+      "Bash(python3 -c \"import playwright\")",
+      "Bash(npx --version)",
+      "Bash(pkill -f \"http.server 8099\")",
+      "Bash(read p *)",
+      "Bash([ -f \"assets/textures/$p\" ])",
+      "Bash(node --check assets/textures/profile_pics_manifest.js)",
+      "Bash(python3 *)"
     ]
   }
 }
