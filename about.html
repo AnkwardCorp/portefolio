@@ -23,24 +23,30 @@
         </div>
         <div id="about-text">
           <p id="about-desc">I am Amin, a designer who creates and develops concepts and ideas. I’ve been doing this for years with clients around the world. I enjoy exploring, experimenting, failing, and starting again—until it leads to something meaningful. Here are some of my personal and professional creations. I’m always open to collaborating on new projects.</p>
-          <div id="links-section">
-            <span id="arrow-left" class="browse-arrow">→</span>
-            <div id="links-column">
-              <a id="browse-btn" href="browse.html">Browse projects</a>
-              <a id="hand-btn" href="hand_vision.html">Browse projects with hand vision</a>
-            </div>
-            <span id="arrow-right" class="browse-arrow">←</span>
-          </div>
         </div>
       </div>
 
-      <div id="bottom-links">
-        <a href="https://x.com/amin_ankward" target="_blank" rel="noopener">X/Twitter</a>
-        <span id="email-wrapper">
-          <span id="email-label">Email</span>
-          <span id="email-address">amin.ankward@gmail.com</span>
-        </span>
-        <a href="https://instagram.com/amin_ankward" target="_blank" rel="noopener">Instagram</a>
+      <div id="about-bottom">
+        <div id="bottom-links">
+          <a href="https://x.com/amin_ankward" target="_blank" rel="noopener">X/Twitter</a>
+          <span id="email-wrapper">
+            <span id="email-label">Email</span>
+            <span id="email-address">amin.ankward@gmail.com</span>
+          </span>
+          <a href="https://instagram.com/amin_ankward" target="_blank" rel="noopener">Instagram</a>
+        </div>
+
+        <div id="links-section">
+          <span id="links-title">Sommaire</span>
+          <div id="links-row">
+            <span id="arrow-left" class="browse-arrow">→</span>
+            <div id="links-column">
+              <a id="browse-btn" href="browse.html">Browse projects</a>
+              <a id="hand-btn" href="hand_vision.html">Browse projects with hand tracking</a>
+              <a id="devlogs-btn" href="devlogs.html">Devlogs</a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -102,19 +108,17 @@
         this.classList.toggle('revealed');
       });
 
-      const arrowLeft  = document.getElementById('arrow-left');
-      const arrowRight = document.getElementById('arrow-right');
-      const browseBtn  = document.getElementById('browse-btn');
-      const handBtn    = document.getElementById('hand-btn');
+      // La flèche suit le lien survolé. Décalage mesuré à chaque survol plutôt
+      // que mis en cache : la hauteur des liens change avec la largeur de la
+      // fenêtre, quand un libellé passe sur deux lignes.
+      const arrowLeft = document.getElementById('arrow-left');
+      const menuLinks = document.querySelectorAll('#links-column a');
 
-      function moveArrows(ty) {
-        arrowLeft.style.transform  = `translateY(${ty}px)`;
-        arrowRight.style.transform = `translateY(${ty}px)`;
-      }
-
-      browseBtn.addEventListener('mouseenter', () => moveArrows(0));
-      handBtn.addEventListener('mouseenter', () => {
-        moveArrows(handBtn.getBoundingClientRect().top - browseBtn.getBoundingClientRect().top);
+      menuLinks.forEach((link) => {
+        link.addEventListener('mouseenter', () => {
+          const top = menuLinks[0].getBoundingClientRect().top;
+          arrowLeft.style.transform = `translateY(${link.getBoundingClientRect().top - top}px)`;
+        });
       });
     </script>
   </body>

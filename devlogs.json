@@ -1,0 +1,29 @@
+{
+  "entries": [
+    {
+      "date": "2026-07-30",
+      "title": "The intro moved to its own page",
+      "body": "The landing page used to fade in the intro text and the menu once the scroll was over, all on the same page. They now live on a dedicated page that the torus navigates to at the end of the scroll, with a cross-fade between the two. The description types itself in, word by word, the same way project descriptions do in the gallery."
+    },
+    {
+      "date": "2026-06-29",
+      "title": "UI polish",
+      "body": "Glassmorphism on the sprite tooltip, a resizable hand preview, and a redesigned camera button."
+    },
+    {
+      "date": "2026-05-08",
+      "title": "Gallery menu and hand tracking fixes",
+      "body": "Added the menu that swaps the gallery dataset, and ironed out the rough edges of the hand tracking."
+    },
+    {
+      "date": "2026-05-07",
+      "title": "Hand tracking with MediaPipe",
+      "body": "Pinch to rotate the gallery. MediaPipe loads from a CDN at runtime, so there is nothing to install and nothing to build."
+    },
+    {
+      "date": "2026-05-06",
+      "title": "The browse gallery",
+      "body": "Projects laid out as sprites along a curved line, with snap navigation and a table of contents on the right."
+    }
+  ]
+}

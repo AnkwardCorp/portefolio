@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AnkwardCorp: Devlogs</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&display=swap" />
+  </head>
+  <body class="devlogs-page">
+    <script>
+      // Appliqué avant le premier paint pour éviter un flash de thème clair.
+      if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+    </script>
+
+    <div id="page-fade" class="cover"></div>
+    <div id="theme-fade"></div>
+
+    <a id="btn-back" href="about.html" aria-label="Back">&#8592;</a>
+
+    <div id="devlogs">
+      <h1 id="devlogs-title">Devlogs</h1>
+      <div id="devlogs-list"></div>
+    </div>
+
+    <button id="theme-toggle" aria-label="Toggle dark mode">☽</button>
+
+    <script>
+      const pageFade  = document.getElementById('page-fade');
+      const themeFade = document.getElementById('theme-fade');
+      const themeBtn  = document.getElementById('theme-toggle');
+      const listEl    = document.getElementById('devlogs-list');
+
+      let isDark = localStorage.getItem('darkMode') === 'true';
+      themeBtn.textContent = isDark ? '🌞' : '🌙';
+
+      requestAnimationFrame(() => pageFade.classList.remove('cover'));
+
+      themeBtn.addEventListener('click', () => {
+        isDark = !isDark;
+        localStorage.setItem('darkMode', isDark);
+        // Même bascule que sur les autres pages : voile, swap, dévoile.
+        themeFade.style.background = isDark ? '#000' : '#fff';
+        themeFade.style.opacity = '1';
+        setTimeout(() => {
+          document.body.classList.toggle('dark', isDark);
+          themeBtn.textContent = isDark ? '🌞' : '🌙';
+          themeFade.style.opacity = '0';
+        }, 250);
+      });
+
+      // textContent partout : les entrées sont du texte, pas du HTML.
+      function render(entries) {
+        listEl.textContent = '';
+        if (entries.length === 0) {
+          const empty = document.createElement('p');
+          empty.className = 'devlog-empty';
+          empty.textContent = 'Nothing logged yet.';
+          listEl.appendChild(empty);
+          return;
+        }
+        entries.forEach((entry) => {
+          const item  = document.createElement('article');
+          const date  = document.createElement('p');
+          const title = document.createElement('h2');
+          const body  = document.createElement('p');
+          item.className  = 'devlog';
+          date.className  = 'devlog-date';
+          title.className = 'devlog-title';
+          body.className  = 'devlog-body';
+          date.textContent  = entry.date  || '';
+          title.textContent = entry.title || '';
+          body.textContent  = entry.body  || '';
+          item.append(date, title, body);
+          listEl.appendChild(item);
+        });
+      }
+
+      fetch('./devlogs.json')
+        .then((r) => r.json())
+        .then((d) => render(d.entries || []))
+        .catch(() => {
+          listEl.textContent = '';
+          const err = document.createElement('p');
+          err.className = 'devlog-empty';
+          err.textContent = 'Devlogs could not be loaded.';
+          listEl.appendChild(err);
+        });
+    </script>
+  </body>
+</html>

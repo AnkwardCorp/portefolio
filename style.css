@@ -129,27 +129,37 @@ body.about-page {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 72px 20px 48px;
+  justify-content: space-between;
+  gap: 64px;
+  padding: 48px clamp(20px, 4.5vw, 72px) 64px;
   font-family: 'Roboto', sans-serif;
   color: var(--text-primary);
-  text-align: center;
 }
 
+/* Bloc identité : collé en haut à gauche. */
 #about-main {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
+  align-items: flex-start;
+  gap: 22px;
+}
+
+/* Ligne du bas : réseaux à gauche, sommaire à droite. Les deux blocs sont
+   alignés sur leur base pour que le dernier lien du sommaire et le dernier
+   réseau se posent sur la même ligne. */
+#about-bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
 }
 
 #about-text {
-  width: min(300px, 85vw);
+  width: min(330px, 85vw);
   font-size: 14px;
   font-weight: 400;
   color: var(--text-secondary);
-  text-align: justify;
+  text-align: left;
 }
 
 #about-text p {
@@ -177,7 +187,121 @@ body.about-page {
   transform: none;
   opacity: 1;
   pointer-events: auto;
-  margin-top: 40px;
+  align-items: flex-start;
+  text-align: left;
+}
+
+/* Sommaire — aligné à droite de la page, liste calée à gauche du bloc. */
+.about-page #links-section {
+  margin-top: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 44px;
+}
+
+#links-title {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  transition: color 0.4s ease;
+}
+
+#links-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.about-page #links-column {
+  align-items: flex-start;
+}
+
+/* Empilement en dessous du seuil où sommaire et réseaux se marcheraient
+   dessus : tout repasse à gauche, l'un sous l'autre. */
+@media (max-width: 700px) {
+  #about-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 48px;
+  }
+
+  .about-page #links-section {
+    order: -1;
+    gap: 28px;
+  }
+}
+
+/* ── Page devlogs (devlogs.html) ─────────────────────────────────────────── */
+
+body.devlogs-page {
+  overflow-y: auto;
+}
+
+#devlogs {
+  width: min(560px, 88vw);
+  margin: 0 auto;
+  padding: 96px 0 80px;
+  font-family: 'Roboto', sans-serif;
+  color: var(--text-primary);
+}
+
+#devlogs-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 48px;
+}
+
+.devlog {
+  padding-bottom: 32px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--text-secondary);
+}
+
+.devlog:last-child {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.devlog-date {
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.devlog-title {
+  font-size: 14px;
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
+.devlog-body,
+.devlog-empty {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  text-align: justify;
+}
+
+/* Le bouton retour est en position: fixed ici — la page défile, contrairement
+   à browse.html où il est absolu dans un #ui figé. */
+.devlogs-page #btn-back {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 10;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-size: 16px;
+  transition: opacity 0.2s, color 0.4s;
+}
+
+.devlogs-page #btn-back:hover {
+  opacity: 0.4;
 }
 
 #links-section {
@@ -206,7 +330,7 @@ body.about-page {
   line-height: 1.4;
 }
 
-#browse-btn, #blog-btn, #hand-btn {
+#browse-btn, #blog-btn, #hand-btn, #devlogs-btn {
   color: var(--text-primary);
   text-decoration: underline;
   font-family: 'Roboto', sans-serif;
