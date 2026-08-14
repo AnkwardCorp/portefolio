@@ -27,6 +27,8 @@ const PARAMS = {
   autoAdvanceSpeed:       2.5,   // desktop only
   mobileAdvanceDuration:  0.8,   // secondes pour atteindre la fin sur mobile
   letsGoThreshold:        0.70,
+  tooltipOffsetY:         28,    // px sous le sprite survolé
+  tooltipMargin:          12,    // px minimum entre la bulle et le bord de l'écran
   navigateThreshold:      0.92,  // fraction de maxCameraAdvance déclenchant le passage sur about.html
   navigateFadeDuration:   0.45,  // secondes de fondu avant la navigation
 };
@@ -349,9 +351,17 @@ export class AppController {
       worldPos.project(this.sceneView.camera);
       const sx = ( worldPos.x * 0.5 + 0.5) * window.innerWidth;
       const sy = (-worldPos.y * 0.5 + 0.5) * window.innerHeight;
-      const hw = this._tooltipEl.offsetWidth / 2;
-      this._tooltipEl.style.left = `${sx - hw}px`;
-      this._tooltipEl.style.top  = `${sy + 28}px`;
+      // Bulle centrée sous le sprite, puis ramenée dans le viewport : elle est en
+      // nowrap et certaines notes dépassent 60 caractères, donc près d'un bord
+      // elle sortirait du cadre. Si elle est plus large que la fenêtre, la borne
+      // basse l'emporte et le texte reste lisible à partir de la gauche.
+      const w = this._tooltipEl.offsetWidth;
+      const h = this._tooltipEl.offsetHeight;
+      const m = PARAMS.tooltipMargin;
+      const left = Math.max(m, Math.min(sx - w / 2, window.innerWidth  - w - m));
+      const top  = Math.max(m, Math.min(sy + PARAMS.tooltipOffsetY, window.innerHeight - h - m));
+      this._tooltipEl.style.left = `${left}px`;
+      this._tooltipEl.style.top  = `${top}px`;
     } else if (this._tooltipVisible) {
       clearTimeout(this._tooltipHideTimer);
       this._tooltipEl.style.opacity = '0';
